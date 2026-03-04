@@ -42,7 +42,7 @@ const pool = new Pool({
    (Workout App is beside Workout_Backend)
 ---------------------------*/
 
-const frontendPath = path.join(__dirname, "..", "Workout App");
+const frontendPath = path.join(__dirname, "Workout App");
 console.log("Serving frontend from:", frontendPath);
 
 app.use(express.static(frontendPath));
