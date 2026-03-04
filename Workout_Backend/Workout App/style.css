@@ -266,3 +266,21 @@ tr:last-child td {
     font-size: 14px;
   }
 }
+
+.bug-btn {
+  background: none;
+  border: 1px solid #ddd;
+  color: #555;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 0;
+  width: auto;
+}
+
+.bug-btn:hover {
+  background: #fff3cd;
+  border-color: #f0c040;
+  opacity: 1;
+}
