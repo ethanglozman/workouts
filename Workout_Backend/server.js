@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
@@ -6,164 +7,154 @@ const { createClient } = require("@supabase/supabase-js");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* =============================
-   SUPABASE CLIENT
-============================= */
-
+// ===== Supabase Setup =====
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-/* =============================
-   MIDDLEWARE
-============================= */
-
+// ===== Middleware =====
 app.use(express.json());
 
 app.use(
   session({
-    secret: "supersecret",
+    secret: process.env.SESSION_SECRET || "supersecret",
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: { secure: false }
   })
 );
 
-/* =============================
-   SERVE FRONTEND
-============================= */
-
-const frontendPath = path.join(__dirname, "Workout App");
-console.log("Serving frontend from:", frontendPath);
+// Serve frontend
+const frontendPath = path.join(__dirname, "../workout_app");
 app.use(express.static(frontendPath));
 
-/* =============================
-   AUTH ROUTES
-============================= */
+// ===== Auth Middleware =====
+function requireLogin(req, res, next) {
+  if (!req.session.username) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+  next();
+}
 
-// Simple login (stores username in session)
+// =============================
+// AUTH ROUTES
+// =============================
+
+// Login
 app.post("/login", (req, res) => {
-  if (!req.body || !req.body.username) {
+  const { username } = req.body;
+
+  if (!username) {
     return res.status(400).json({ error: "Username required" });
   }
 
-  const username = req.body.username;
-
-  req.session.user = username;
+  req.session.username = username;
   res.json({ success: true });
 });
 
-app.get("/me", (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Not logged in" });
-  }
-
-  res.json({ user: req.session.user });
-});
-
+// Logout
 app.post("/logout", (req, res) => {
   req.session.destroy(() => {
     res.json({ success: true });
   });
 });
 
-/* =============================
-   WORKOUT ROUTES
-============================= */
-
-// Get workouts for logged-in user
-app.get("/workouts", async (req, res) => {
-  if (!req.session.user) {
+// Get current user
+app.get("/me", (req, res) => {
+  if (!req.session.username) {
     return res.status(401).json({ error: "Not logged in" });
   }
 
+  res.json({ username: req.session.username });
+});
+
+// =============================
+// WORKOUT ROUTES
+// =============================
+
+// Get workouts
+app.get("/workouts", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("workouts")
     .select("*")
-    .eq("username", req.session.user)
-    .order("date", { ascending: false });
+    .eq("username", req.session.username)
+    .order("created_at", { ascending: false });
 
-  if (error) return res.status(500).json({ error });
+  if (error) return res.status(500).json(error);
 
   res.json(data);
 });
 
 // Add workout
-app.post("/workouts", async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Not logged in" });
-  }
+app.post("/workouts", requireLogin, async (req, res) => {
+  const { exercise, reps, weight } = req.body;
 
-  const { date, day, exercise, reps, weight } = req.body;
+  const { error } = await supabase.from("workouts").insert([
+    {
+      username: req.session.username,
+      exercise,
+      reps,
+      weight
+    }
+  ]);
 
-  const { data, error } = await supabase
-    .from("workouts")
-    .insert([
-      {
-        date,
-        day,
-        exercise,
-        reps,
-        weight,
-        username: req.session.user
-      }
-    ]);
-
-  if (error) return res.status(500).json({ error });
-
-  res.json(data);
-});
-
-// Update workout
-app.put("/workouts/:id", async (req, res) => {
-  const { id } = req.params;
-  const { date, reps, weight } = req.body;
-
-  const { data, error } = await supabase
-    .from("workouts")
-    .update({ date, reps, weight })
-    .eq("id", id);
-
-  if (error) return res.status(500).json({ error });
-
-  res.json(data);
-});
-
-// Delete workout
-app.delete("/workouts/:id", async (req, res) => {
-  const { id } = req.params;
-
-  const { error } = await supabase
-    .from("workouts")
-    .delete()
-    .eq("id", id);
-
-  if (error) return res.status(500).json({ error });
+  if (error) return res.status(500).json(error);
 
   res.json({ success: true });
 });
 
-/* =============================
-   EXERCISES ROUTE
-============================= */
+// =============================
+// EXERCISE ROUTES (Admin Page)
+// =============================
 
-app.get("/exercises/:day", async (req, res) => {
-  const { day } = req.params;
+// Get exercises by category
+app.get("/exercises/:category", requireLogin, async (req, res) => {
+  const { category } = req.params;
 
   const { data, error } = await supabase
     .from("exercises")
     .select("*")
-    .eq("day", day);
+    .eq("category", category)
+    .order("name");
 
-  if (error) return res.status(500).json({ error });
+  if (error) return res.status(500).json(error);
 
   res.json(data);
 });
 
-/* =============================
-   START SERVER
-============================= */
+// Get ALL exercises (admin page)
+app.get("/admin/exercises", requireLogin, async (req, res) => {
+  const { data, error } = await supabase
+    .from("exercises")
+    .select("*")
+    .order("category")
+    .order("name");
+
+  if (error) return res.status(500).json(error);
+
+  res.json(data);
+});
+
+// Add exercise (admin page)
+app.post("/admin/exercises", requireLogin, async (req, res) => {
+  const { name, category } = req.body;
+
+  if (!name || !category) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
+  const { error } = await supabase
+    .from("exercises")
+    .insert([{ name, category }]);
+
+  if (error) return res.status(500).json(error);
+
+  res.json({ success: true });
+});
+
+// =============================
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

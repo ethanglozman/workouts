@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manage Exercises</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="card">
+  <h2>Exercise Manager</h2>
+
+  <h3>Add Exercise</h3>
+
+  <input id="name" placeholder="Exercise Name" class="input">
+  <input id="category" placeholder="Category (Push/Pull/Legs)" class="input">
+  <button onclick="addExercise()" class="btn">Add</button>
+
+  <h3 style="margin-top:30px;">All Exercises</h3>
+  <ul id="exerciseList"></ul>
+</div>
+
+<script>
+
+async function loadExercises() {
+  const res = await fetch("/admin/exercises");
+  const data = await res.json();
+
+  const list = document.getElementById("exerciseList");
+  list.innerHTML = "";
+
+  data.forEach(ex => {
+    const li = document.createElement("li");
+    li.innerText = `${ex.name} (${ex.category})`;
+    list.appendChild(li);
+  });
+}
+
+async function addExercise() {
+  const name = document.getElementById("name").value;
+  const category = document.getElementById("category").value;
+
+  const res = await fetch("/admin/exercises", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ name, category })
+  });
+
+  if (res.ok) {
+    loadExercises();
+  }
+}
+
+loadExercises();
+
+</script>
+
+</body>
+</html>
