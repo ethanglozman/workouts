@@ -7,8 +7,7 @@ async function checkLogin() {
 
 checkLogin();
 
-// ✅ REMOVE localhost completely
-const API_URL = ""; 
+const API_URL = "";
 
 const dateInput = document.getElementById("dateInput");
 const daySelect = document.getElementById("daySelect");
@@ -23,16 +22,36 @@ async function loadExercises() {
   const day = daySelect.value;
   if (!day) return;
 
-  const res = await fetch(`/exercises/${day}`);
-  const data = await res.json();
+  exerciseSelect.innerHTML = '<option value="">Loading...</option>';
 
-  exerciseSelect.innerHTML = '<option value="">Select Exercise</option>';
-  data.forEach(e => {
-    const option = document.createElement("option");
-    option.value = e.name;
-    option.textContent = e.name;
-    exerciseSelect.appendChild(option);
-  });
+  try {
+    const res = await fetch(`/exercises/${day}`);
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Failed to load exercises:", res.status, text);
+      exerciseSelect.innerHTML = '<option value="">Failed to load</option>';
+      return;
+    }
+
+    const data = await res.json();
+    exerciseSelect.innerHTML = '<option value="">Select Exercise</option>';
+
+    if (data.length === 0) {
+      exerciseSelect.innerHTML = '<option value="">No exercises found for ' + day + '</option>';
+      return;
+    }
+
+    data.forEach(e => {
+      const option = document.createElement("option");
+      option.value = e.name;
+      option.textContent = e.name;
+      exerciseSelect.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Error loading exercises:", err);
+    exerciseSelect.innerHTML = '<option value="">Error loading</option>';
+  }
 }
 
 async function addWorkout() {
@@ -96,10 +115,7 @@ async function updateWorkout(id, btn) {
 }
 
 async function deleteWorkout(id) {
-  await fetch(`/workouts/${id}`, {
-    method: "DELETE"
-  });
-
+  await fetch(`/workouts/${id}`, { method: "DELETE" });
   loadWorkouts();
 }
 
