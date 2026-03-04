@@ -1,43 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Workout App - Login</title>
+  <title>Workout App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="centered-page">
-
   <div class="card">
-    <h2>Workout Login</h2>
+    <h2>💪 Workout Tracker</h2>
+    <p class="subtitle">Select your profile to continue</p>
 
-    <input 
-      type="text" 
-      id="username" 
-      placeholder="Enter username"
-      class="input"
-    />
+    <select id="username" class="input">
+      <option value="">Choose user...</option>
+      <option value="Igor">Igor</option>
+      <option value="Matvei">Matvei</option>
+    </select>
 
-    <button onclick="login()" class="btn">
-      Login
-    </button>
-
+    <button onclick="login()" class="btn">Let's Go</button>
     <p id="error" class="error"></p>
   </div>
 
   <script>
     async function login() {
-      const username = document.getElementById("username").value.trim();
+      const username = document.getElementById("username").value;
       const errorEl = document.getElementById("error");
 
       if (!username) {
-        errorEl.innerText = "Username required";
+        errorEl.innerText = "Please select a user";
         return;
       }
 
       const res = await fetch("/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username })
       });
 
@@ -50,6 +45,5 @@
       }
     }
   </script>
-
 </body>
 </html>
