@@ -40,7 +40,7 @@ app.use(
 // ================================
 
 // Adjust this path if needed depending on your folder structure
-const frontendPath = path.join(__dirname, "../workout_app");
+const frontendPath = path.join(__dirname, "Workout App");
 
 app.use(express.static(frontendPath));
 
