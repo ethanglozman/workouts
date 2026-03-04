@@ -1,119 +1,47 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f2f4f8;
-  padding: 40px;
+/* ===== Base ===== */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.container {
-  max-width: 900px;
-  margin: auto;
-  background: white;
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f2f4f8;
+  margin: 0;
+  padding: 16px;
+  font-size: 16px;
 }
 
 h2 {
-  margin-bottom: 20px;
+  margin: 0 0 4px 0;
+  font-size: 22px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-input, select {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
-
-button {
-  background: black;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 20px;
-}
-
-button:hover {
-  opacity: 0.85;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th {
-  text-align: left;
-  padding: 12px;
-  background: #fafafa;
-}
-
-td {
-  padding: 12px;
-  border-top: 1px solid #eee;
-}
-
-.actions button {
-  font-size: 12px;
-  padding: 6px 8px;
-  margin-right: 5px;
-}
-/* ===== Login / Card Styles ===== */
+/* ===== Login Page ===== */
 body.centered-page {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 0;
-  margin: 0;
+  padding: 20px;
 }
 
 .card {
   background: white;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  padding: 32px 24px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
-.card h2 {
-  margin: 0 0 6px 0;
-}
-
-.input {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
+.subtitle {
+  margin: 0;
+  color: #666;
   font-size: 15px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.btn {
-  background: black;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 15px;
-  width: 100%;
-  margin-bottom: 0;
-}
-
-.btn:hover {
-  opacity: 0.85;
 }
 
 .error {
@@ -122,3 +50,149 @@ body.centered-page {
   margin: 0;
   min-height: 18px;
 }
+
+/* ===== Main App ===== */
+.container {
+  max-width: 700px;
+  margin: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header h2 {
+  font-size: 20px;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid #ddd;
+  color: #555;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.logout-btn:hover {
+  background: #f5f5f5;
+  opacity: 1;
+}
+
+/* ===== Form ===== */
+.form-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+input, select, .input {
+  width: 100%;
+  padding: 14px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  background: #fafafa;
+  color: #111;
+  appearance: auto;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #999;
+  background: white;
+}
+
+/* ===== Buttons ===== */
+button, .btn {
+  background: #111;
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin: 0;
+}
+
+button:hover, .btn:hover {
+  opacity: 0.85;
+}
+
+/* ===== Table ===== */
+.table-wrap {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+thead {
+  background: #f8f8f8;
+}
+
+th {
+  text-align: left;
+  padding: 14px 12px;
+  font-size: 13px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #eee;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+}
+
+td input {
+  padding: 8px 10px;
+  font-size: 15px;
+  background: white;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.actions button {
+  font-size: 13px;
+  padding: 8px 10px;
+  width: auto;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.save-btn { background: #2d6a4f; }
+.delete-btn { background: #c0392b; }
