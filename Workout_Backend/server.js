@@ -84,7 +84,7 @@ app.get("/workouts", requireLogin, async (req, res) => {
     .from("workouts")
     .select("*")
     .eq("username", req.session.username)
-    .order("created_at", { ascending: false });
+    .order("date", { ascending: false });
 
   if (error) return res.status(500).json(error);
 
