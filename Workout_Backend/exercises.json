@@ -1,0 +1,27 @@
+{
+  "Push": [
+    "Barbell Bench Press",
+    "Incline Dumbbell Bench Press",
+    "Cable Triceps Pushdown",
+    "Chest Press Machine"
+  ],
+  "Pull": [
+    "Lat Pulldown (Machine)",
+    "Seated Row (Machine)",
+    "Pull-Up",
+    "Bent-Over Barbell Row",
+    "Alternating Dumbbell Curl"
+  ],
+  "Legs": [
+    "Barbell Back Squat",
+    "Leg Extension (Machine)",
+    "Leg Curl (Machine)",
+    "Standing Calf Raise"
+  ],
+  "Core": [
+    "Plank",
+    "Hanging Leg Raise",
+    "Cable Crunch",
+    "Russian Twist"
+  ]
+}

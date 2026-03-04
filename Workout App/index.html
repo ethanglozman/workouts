@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Workout Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Workout Tracker</h2>
+
+    <div class="form-grid">
+      <input type="date" id="dateInput">
+      
+      <select id="daySelect">
+        <option value="">Select Day</option>
+        <option value="Push">Push</option>
+        <option value="Pull">Pull</option>
+        <option value="Legs">Legs</option>
+        <option value="Core">Core</option>
+      </select>
+
+      <select id="exerciseSelect"></select>
+
+      <input type="number" id="reps" placeholder="Reps">
+      <input type="number" id="weight" placeholder="Weight">
+    </div>
+
+    <button onclick="addWorkout()">Add Workout</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Day</th>
+          <th>Exercise</th>
+          <th>Reps</th>
+          <th>Weight</th>
+          <th>Volume</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="workoutTable"></tbody>
+    </table>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
