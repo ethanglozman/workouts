@@ -9,7 +9,10 @@
   <div class="container">
     <div class="header">
       <h2>💪 Workout Tracker</h2>
-      <button class="logout-btn" onclick="logout()">Logout</button>
+      <div style="display:flex;gap:8px;">
+        <button class="bug-btn" onclick="reportBug()">🐛 Report Bug</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
     </div>
 
     <div class="form-card">
@@ -54,6 +57,13 @@
     </div>
   </div>
 
+  <script>
+    function reportBug() {
+      if (confirm("Call Ethan?")) {
+        window.location.href = "tel:6479290774";
+      }
+    }
+  </script>
   <script src="app.js"></script>
 </body>
 </html>
