@@ -7,6 +7,11 @@ async function checkLogin() {
 
 checkLogin();
 
+async function logout() {
+  await fetch("/logout", { method: "POST" });
+  window.location.href = "/login.html";
+}
+
 const API_URL = "";
 
 const dateInput = document.getElementById("dateInput");
@@ -94,16 +99,16 @@ async function loadWorkouts() {
     const volume = w.reps * w.weight;
 
     tr.innerHTML = `
-      <td><input type="date" value="${w.date.slice(0,10)}"></td>
-      <td>${w.day}</td>
-      <td>${w.exercise}</td>
-      <td><input type="number" value="${w.reps}"></td>
-      <td><input type="number" value="${w.weight}"></td>
-      <td>${volume}</td>
-      <td class="actions">
-        <button onclick="updateWorkout(${w.id}, this)">Save</button>
-        <button onclick="deleteWorkout(${w.id})">Delete</button>
-      </td>
+      <td data-label="Date"><input type="date" value="${w.date.slice(0,10)}"></td>
+      <td data-label="Day">${w.day}</td>
+      <td data-label="Exercise">${w.exercise}</td>
+      <td data-label="Reps"><input type="number" value="${w.reps}"></td>
+      <td data-label="Wt"><input type="number" value="${w.weight}"></td>
+      <td data-label="Vol">${volume}</td>
+      <td class="actions-cell"><div class="actions">
+        <button class="save-btn" onclick="updateWorkout(${w.id}, this)">Save</button>
+        <button class="delete-btn" onclick="deleteWorkout(${w.id})">Delete</button>
+      </div></td>
     `;
 
     table.appendChild(tr);
