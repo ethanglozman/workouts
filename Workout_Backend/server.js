@@ -1,35 +1,57 @@
 require("dotenv").config();
+
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
-// ===== Supabase Setup =====
+// ================================
+// Supabase Setup
+// ================================
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("Missing Supabase environment variables.");
+  process.exit(1);
+}
+
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// ===== Middleware =====
+// ================================
+// Middleware
+// ================================
 app.use(express.json());
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "supersecret",
+    secret: process.env.SESSION_SECRET || "fallbacksecret",
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false }
   })
 );
 
-// Serve frontend
+// ================================
+// Serve Frontend
+// ================================
+
+// Adjust this path if needed depending on your folder structure
 const frontendPath = path.join(__dirname, "../workout_app");
+
 app.use(express.static(frontendPath));
 
-// ===== Auth Middleware =====
+// Root route → login page
+app.get("/", (req, res) => {
+  res.sendFile(path.join(frontendPath, "login.html"));
+});
+
+// ================================
+// Auth Middleware
+// ================================
 function requireLogin(req, res, next) {
   if (!req.session.username) {
     return res.status(401).json({ error: "Not logged in" });
@@ -37,9 +59,9 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// =============================
+// ================================
 // AUTH ROUTES
-// =============================
+// ================================
 
 // Login
 app.post("/login", (req, res) => {
@@ -60,7 +82,7 @@ app.post("/logout", (req, res) => {
   });
 });
 
-// Get current user
+// Check current user
 app.get("/me", (req, res) => {
   if (!req.session.username) {
     return res.status(401).json({ error: "Not logged in" });
@@ -69,11 +91,11 @@ app.get("/me", (req, res) => {
   res.json({ username: req.session.username });
 });
 
-// =============================
+// ================================
 // WORKOUT ROUTES
-// =============================
+// ================================
 
-// Get workouts
+// Get workouts for logged in user
 app.get("/workouts", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("workouts")
@@ -90,6 +112,10 @@ app.get("/workouts", requireLogin, async (req, res) => {
 app.post("/workouts", requireLogin, async (req, res) => {
   const { exercise, reps, weight } = req.body;
 
+  if (!exercise || !reps || !weight) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
   const { error } = await supabase.from("workouts").insert([
     {
       username: req.session.username,
@@ -104,9 +130,9 @@ app.post("/workouts", requireLogin, async (req, res) => {
   res.json({ success: true });
 });
 
-// =============================
-// EXERCISE ROUTES (Admin Page)
-// =============================
+// ================================
+// EXERCISE ROUTES
+// ================================
 
 // Get exercises by category
 app.get("/exercises/:category", requireLogin, async (req, res) => {
@@ -123,7 +149,7 @@ app.get("/exercises/:category", requireLogin, async (req, res) => {
   res.json(data);
 });
 
-// Get ALL exercises (admin page)
+// Admin – Get all exercises
 app.get("/admin/exercises", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("exercises")
@@ -136,7 +162,7 @@ app.get("/admin/exercises", requireLogin, async (req, res) => {
   res.json(data);
 });
 
-// Add exercise (admin page)
+// Admin – Add exercise
 app.post("/admin/exercises", requireLogin, async (req, res) => {
   const { name, category } = req.body;
 
@@ -153,8 +179,9 @@ app.post("/admin/exercises", requireLogin, async (req, res) => {
   res.json({ success: true });
 });
 
-// =============================
-
+// ================================
+// Start Server
+// ================================
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
