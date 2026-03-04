@@ -7,7 +7,8 @@ async function checkLogin() {
 
 checkLogin();
 
-const API_URL = "http://localhost:3000";
+// ✅ REMOVE localhost completely
+const API_URL = ""; 
 
 const dateInput = document.getElementById("dateInput");
 const daySelect = document.getElementById("daySelect");
@@ -22,7 +23,7 @@ async function loadExercises() {
   const day = daySelect.value;
   if (!day) return;
 
-  const res = await fetch(`${API_URL}/exercises/${day}`);
+  const res = await fetch(`/exercises/${day}`);
   const data = await res.json();
 
   exerciseSelect.innerHTML = '<option value="">Select Exercise</option>';
@@ -43,7 +44,7 @@ async function addWorkout() {
     weight: document.getElementById("weight").value
   };
 
-  await fetch(`${API_URL}/workouts`, {
+  await fetch(`/workouts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(workout)
@@ -53,7 +54,7 @@ async function addWorkout() {
 }
 
 async function loadWorkouts() {
-  const res = await fetch(`${API_URL}/workouts`);
+  const res = await fetch(`/workouts`);
   const data = await res.json();
 
   table.innerHTML = "";
@@ -85,7 +86,7 @@ async function updateWorkout(id, btn) {
   const reps = row.children[3].querySelector("input").value;
   const weight = row.children[4].querySelector("input").value;
 
-  await fetch(`${API_URL}/workouts/${id}`, {
+  await fetch(`/workouts/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ date, reps, weight })
@@ -95,7 +96,7 @@ async function updateWorkout(id, btn) {
 }
 
 async function deleteWorkout(id) {
-  await fetch(`${API_URL}/workouts/${id}`, {
+  await fetch(`/workouts/${id}`, {
     method: "DELETE"
   });
 
