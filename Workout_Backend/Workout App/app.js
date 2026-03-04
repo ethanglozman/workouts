@@ -74,7 +74,18 @@ async function addWorkout() {
 
 async function loadWorkouts() {
   const res = await fetch(`/workouts`);
+
+  if (!res.ok) {
+    console.error("Failed to load workouts:", res.status, await res.text());
+    return;
+  }
+
   const data = await res.json();
+
+  if (!Array.isArray(data)) {
+    console.error("Unexpected workouts response:", data);
+    return;
+  }
 
   table.innerHTML = "";
 
