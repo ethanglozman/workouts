@@ -111,6 +111,36 @@ app.post("/workouts", requireLogin, async (req, res) => {
   res.json({ success: true });
 });
 
+
+// Update workout
+app.put("/workouts/:id", requireLogin, async (req, res) => {
+  const { id } = req.params;
+  const { date, reps, weight } = req.body;
+
+  const { error } = await supabase
+    .from("workouts")
+    .update({ date, reps, weight })
+    .eq("id", id)
+    .eq("username", req.session.username);
+
+  if (error) return res.status(500).json(error);
+  res.json({ success: true });
+});
+
+// Delete workout
+app.delete("/workouts/:id", requireLogin, async (req, res) => {
+  const { id } = req.params;
+
+  const { error } = await supabase
+    .from("workouts")
+    .delete()
+    .eq("id", id)
+    .eq("username", req.session.username);
+
+  if (error) return res.status(500).json(error);
+  res.json({ success: true });
+});
+
 // =============================
 // EXERCISE ROUTES (Admin Page)
 // =============================
