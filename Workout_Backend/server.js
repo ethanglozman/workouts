@@ -26,8 +26,13 @@ app.use(
 );
 
 // Serve frontend
-const frontendPath = path.join(__dirname, "../workout_app");
+const frontendPath = path.join(__dirname, "Workout App");
 app.use(express.static(frontendPath));
+
+// Serve login page at root
+app.get("/", (req, res) => {
+  res.sendFile(path.join(frontendPath, "login.html"));
+});
 
 // ===== Auth Middleware =====
 function requireLogin(req, res, next) {
