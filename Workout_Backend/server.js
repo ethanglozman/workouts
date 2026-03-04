@@ -1,57 +1,35 @@
 require("dotenv").config();
-
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 
-// ================================
-// Supabase Setup
-// ================================
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("Missing Supabase environment variables.");
-  process.exit(1);
-}
-
+// ===== Supabase Setup =====
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// ================================
-// Middleware
-// ================================
+// ===== Middleware =====
 app.use(express.json());
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "fallbacksecret",
+    secret: process.env.SESSION_SECRET || "supersecret",
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false }
   })
 );
 
-// ================================
-// Serve Frontend
-// ================================
-
-// Adjust this path if needed depending on your folder structure
-const frontendPath = path.join(__dirname, "Workout App");
-
+// Serve frontend
+const frontendPath = path.join(__dirname, "../workout_app");
 app.use(express.static(frontendPath));
 
-// Root route → login page
-app.get("/", (req, res) => {
-  res.sendFile(path.join(frontendPath, "login.html"));
-});
-
-// ================================
-// Auth Middleware
-// ================================
+// ===== Auth Middleware =====
 function requireLogin(req, res, next) {
   if (!req.session.username) {
     return res.status(401).json({ error: "Not logged in" });
@@ -59,9 +37,9 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// ================================
+// =============================
 // AUTH ROUTES
-// ================================
+// =============================
 
 // Login
 app.post("/login", (req, res) => {
@@ -82,7 +60,7 @@ app.post("/logout", (req, res) => {
   });
 });
 
-// Check current user
+// Get current user
 app.get("/me", (req, res) => {
   if (!req.session.username) {
     return res.status(401).json({ error: "Not logged in" });
@@ -91,11 +69,11 @@ app.get("/me", (req, res) => {
   res.json({ username: req.session.username });
 });
 
-// ================================
+// =============================
 // WORKOUT ROUTES
-// ================================
+// =============================
 
-// Get workouts for logged in user
+// Get workouts
 app.get("/workouts", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("workouts")
@@ -110,18 +88,16 @@ app.get("/workouts", requireLogin, async (req, res) => {
 
 // Add workout
 app.post("/workouts", requireLogin, async (req, res) => {
-  const { exercise, reps, weight } = req.body;
-
-  if (!exercise || !reps || !weight) {
-    return res.status(400).json({ error: "Missing fields" });
-  }
+  const { exercise, reps, weight, date, day } = req.body;
 
   const { error } = await supabase.from("workouts").insert([
     {
       username: req.session.username,
       exercise,
       reps,
-      weight
+      weight,
+      date,
+      day
     }
   ]);
 
@@ -130,9 +106,9 @@ app.post("/workouts", requireLogin, async (req, res) => {
   res.json({ success: true });
 });
 
-// ================================
-// EXERCISE ROUTES
-// ================================
+// =============================
+// EXERCISE ROUTES (Admin Page)
+// =============================
 
 // Get exercises by category
 app.get("/exercises/:category", requireLogin, async (req, res) => {
@@ -141,7 +117,7 @@ app.get("/exercises/:category", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("exercises")
     .select("*")
-    .eq("category", category)
+    .eq("day", category)
     .order("name");
 
   if (error) return res.status(500).json(error);
@@ -149,12 +125,12 @@ app.get("/exercises/:category", requireLogin, async (req, res) => {
   res.json(data);
 });
 
-// Admin – Get all exercises
+// Get ALL exercises (admin page)
 app.get("/admin/exercises", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("exercises")
     .select("*")
-    .order("category")
+    .order("day")
     .order("name");
 
   if (error) return res.status(500).json(error);
@@ -162,9 +138,10 @@ app.get("/admin/exercises", requireLogin, async (req, res) => {
   res.json(data);
 });
 
-// Admin – Add exercise
+// Add exercise (admin page)
 app.post("/admin/exercises", requireLogin, async (req, res) => {
-  const { name, category } = req.body;
+  const { name, category, day: dayField } = req.body;
+  const day = dayField || category;
 
   if (!name || !category) {
     return res.status(400).json({ error: "Missing fields" });
@@ -172,16 +149,15 @@ app.post("/admin/exercises", requireLogin, async (req, res) => {
 
   const { error } = await supabase
     .from("exercises")
-    .insert([{ name, category }]);
+    .insert([{ name, day }]);
 
   if (error) return res.status(500).json(error);
 
   res.json({ success: true });
 });
 
-// ================================
-// Start Server
-// ================================
+// =============================
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
