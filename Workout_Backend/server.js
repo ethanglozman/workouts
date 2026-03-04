@@ -43,11 +43,11 @@ app.use(express.static(frontendPath));
 
 // Simple login (stores username in session)
 app.post("/login", (req, res) => {
-  const { username } = req.body;
-
-  if (!username) {
+  if (!req.body || !req.body.username) {
     return res.status(400).json({ error: "Username required" });
   }
+
+  const username = req.body.username;
 
   req.session.user = username;
   res.json({ success: true });
