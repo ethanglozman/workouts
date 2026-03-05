@@ -9,8 +9,9 @@
   <div class="container">
     <div class="header">
       <h2>💪 Workout Tracker</h2>
-      <div style="display:flex;gap:8px;">
-        <button class="bug-btn" onclick="reportBug()">🐛 Report Bug</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+        <button class="icon-btn export-btn" onclick="exportToExcel()" title="Export">📥 Export</button>
+        <button class="bug-btn" onclick="reportBug()">🐛 Bug</button>
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
     </div>
@@ -32,13 +33,35 @@
       </select>
 
       <div class="form-row">
-        <input type="number" id="reps" placeholder="Reps" inputmode="numeric">
-        <input type="number" id="weight" placeholder="Weight (lbs)" inputmode="numeric">
+        <input type="number" id="reps" placeholder="Reps" inputmode="decimal" step="1">
+        <input type="number" id="weight" placeholder="Weight (lbs)" inputmode="decimal" step="0.5">
       </div>
+
+      <textarea id="notes" placeholder="Notes (optional — e.g. paused reps, injury mod...)" rows="2"></textarea>
 
       <button onclick="addWorkout()">+ Add Set</button>
     </div>
 
+    <!-- Last session for selected day -->
+    <div id="lastSessionWrap" style="display:none;">
+      <div class="section-label">📋 Last <span id="lastSessionDay"></span> session</div>
+      <div class="table-wrap" id="lastSessionTableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Exercise</th>
+              <th>Reps</th>
+              <th>Wt</th>
+              <th>Vol</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="lastSessionTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-label">📝 All workouts</div>
     <div class="table-wrap">
       <table>
         <thead>
@@ -49,6 +72,7 @@
             <th>Reps</th>
             <th>Wt</th>
             <th>Vol</th>
+            <th>Notes</th>
             <th></th>
           </tr>
         </thead>
@@ -64,6 +88,7 @@
       }
     }
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
