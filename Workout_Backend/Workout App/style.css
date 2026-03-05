@@ -284,3 +284,74 @@ tr:last-child td {
   border-color: #f0c040;
   opacity: 1;
 }
+
+/* ===== Notes textarea ===== */
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  font-family: inherit;
+  background: #fafafa;
+  resize: none;
+  color: #111;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #999;
+  background: white;
+}
+
+/* ===== Section label ===== */
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin: 20px 0 10px 2px;
+}
+
+/* ===== Last session panel ===== */
+#lastSessionWrap .table-wrap {
+  border: 2px solid #e8f4ea;
+  background: #f6fdf7;
+}
+
+#lastSessionWrap th {
+  background: #e8f4ea;
+}
+
+/* ===== Export / icon buttons ===== */
+.export-btn {
+  background: none;
+  border: 1px solid #ddd;
+  color: #555;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 0;
+  width: auto;
+}
+
+.export-btn:hover {
+  background: #eef6ff;
+  border-color: #aac8f0;
+  opacity: 1;
+}
+
+/* Notes column in table */
+td input[type="text"] {
+  width: 100%;
+  min-width: 80px;
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  td input[type="text"] {
+    width: 100%;
+  }
+}
