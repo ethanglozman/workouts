@@ -93,7 +93,7 @@ app.get("/workouts", requireLogin, async (req, res) => {
 
 // Add workout
 app.post("/workouts", requireLogin, async (req, res) => {
-  const { exercise, reps, weight, date, day } = req.body;
+  const { exercise, reps, weight, date, day, notes } = req.body;
 
   const { error } = await supabase.from("workouts").insert([
     {
@@ -102,7 +102,8 @@ app.post("/workouts", requireLogin, async (req, res) => {
       reps,
       weight,
       date,
-      day
+      day,
+      notes: notes || null
     }
   ]);
 
@@ -115,11 +116,11 @@ app.post("/workouts", requireLogin, async (req, res) => {
 // Update workout
 app.put("/workouts/:id", requireLogin, async (req, res) => {
   const { id } = req.params;
-  const { date, reps, weight } = req.body;
+  const { date, reps, weight, notes } = req.body;
 
   const { error } = await supabase
     .from("workouts")
-    .update({ date, reps, weight })
+    .update({ date, reps, weight, notes: notes || null })
     .eq("id", id)
     .eq("username", req.session.username);
 
@@ -139,6 +140,37 @@ app.delete("/workouts/:id", requireLogin, async (req, res) => {
 
   if (error) return res.status(500).json(error);
   res.json({ success: true });
+});
+
+
+// Get last session for a given day
+app.get("/workouts/last-session/:day", requireLogin, async (req, res) => {
+  const { day } = req.params;
+
+  // Find the most recent date for this user + day
+  const { data: dates, error: dateError } = await supabase
+    .from("workouts")
+    .select("date")
+    .eq("username", req.session.username)
+    .eq("day", day)
+    .order("date", { ascending: false })
+    .limit(1);
+
+  if (dateError) return res.status(500).json(dateError);
+  if (!dates || dates.length === 0) return res.json([]);
+
+  const lastDate = dates[0].date;
+
+  const { data, error } = await supabase
+    .from("workouts")
+    .select("*")
+    .eq("username", req.session.username)
+    .eq("day", day)
+    .eq("date", lastDate)
+    .order("id", { ascending: true });
+
+  if (error) return res.status(500).json(error);
+  res.json(data);
 });
 
 // =============================
