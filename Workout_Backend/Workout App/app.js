@@ -1,8 +1,6 @@
 async function checkLogin() {
   const res = await fetch("/me");
-  if (!res.ok) {
-    window.location.href = "/login.html";
-  }
+  if (!res.ok) window.location.href = "/login.html";
 }
 checkLogin();
 
@@ -10,8 +8,6 @@ async function logout() {
   await fetch("/logout", { method: "POST" });
   window.location.href = "/login.html";
 }
-
-const API_URL = "";
 
 const dateInput = document.getElementById("dateInput");
 const daySelect = document.getElementById("daySelect");
@@ -24,31 +20,24 @@ dateInput.value = new Date().toISOString().slice(0, 10);
 daySelect.addEventListener("change", () => {
   loadExercises();
   loadLastSession();
+  clearExerciseHistory();
+});
+
+exerciseSelect.addEventListener("change", () => {
+  loadExerciseHistory();
 });
 
 // ===== Exercises dropdown =====
 async function loadExercises() {
   const day = daySelect.value;
   if (!day) return;
-
   exerciseSelect.innerHTML = '<option value="">Loading...</option>';
-
   try {
     const res = await fetch(`/exercises/${day}`);
-    if (!res.ok) {
-      exerciseSelect.innerHTML = '<option value="">Failed to load</option>';
-      console.error("Failed to load exercises:", res.status, await res.text());
-      return;
-    }
-
+    if (!res.ok) { exerciseSelect.innerHTML = '<option value="">Failed to load</option>'; return; }
     const data = await res.json();
     exerciseSelect.innerHTML = '<option value="">Select Exercise</option>';
-
-    if (data.length === 0) {
-      exerciseSelect.innerHTML = `<option value="">No exercises found for ${day}</option>`;
-      return;
-    }
-
+    if (data.length === 0) { exerciseSelect.innerHTML = `<option value="">No exercises for ${day}</option>`; return; }
     data.forEach(e => {
       const opt = document.createElement("option");
       opt.value = e.name;
@@ -56,9 +45,54 @@ async function loadExercises() {
       exerciseSelect.appendChild(opt);
     });
   } catch (err) {
-    console.error("Error loading exercises:", err);
     exerciseSelect.innerHTML = '<option value="">Error loading</option>';
   }
+}
+
+// ===== Mini exercise history (shown when exercise is selected) =====
+let allWorkoutsCache = [];
+
+async function loadExerciseHistory() {
+  const exercise = exerciseSelect.value;
+  const wrap = document.getElementById("exerciseHistoryWrap");
+  const list = document.getElementById("exerciseHistoryList");
+
+  if (!exercise) { wrap.style.display = "none"; return; }
+
+  // Use cache if available, otherwise fetch
+  if (allWorkoutsCache.length === 0) {
+    const res = await fetch("/workouts");
+    if (!res.ok) { wrap.style.display = "none"; return; }
+    allWorkoutsCache = await res.json();
+  }
+
+  const history = allWorkoutsCache
+    .filter(w => w.exercise === exercise)
+    .slice(0, 10); // last 10 sets
+
+  if (history.length === 0) { wrap.style.display = "none"; return; }
+
+  list.innerHTML = "";
+  history.forEach(w => {
+    const vol = (parseFloat(w.reps) * parseFloat(w.weight)).toFixed(1);
+    const div = document.createElement("div");
+    div.className = "mini-history-row";
+    div.innerHTML = `
+      <span class="mini-date">${w.date.slice(0,10)}</span>
+      <span>${w.reps} reps</span>
+      <span>@ ${w.weight} lbs</span>
+      <span class="mini-vol">${vol} vol</span>
+      ${w.notes ? `<span class="mini-note">💬 ${w.notes}</span>` : ''}
+    `;
+    list.appendChild(div);
+  });
+
+  wrap.style.display = "block";
+}
+
+function clearExerciseHistory() {
+  document.getElementById("exerciseHistoryWrap").style.display = "none";
+  document.getElementById("exerciseHistoryList").innerHTML = "";
 }
 
 // ===== Last session for selected day =====
@@ -73,13 +107,11 @@ async function loadLastSession() {
   try {
     const res = await fetch(`/workouts/last-session/${day}`);
     if (!res.ok) { wrap.style.display = "none"; return; }
-
     const data = await res.json();
     if (!data || data.length === 0) { wrap.style.display = "none"; return; }
 
     label.textContent = day;
     tbody.innerHTML = "";
-
     data.forEach(w => {
       const vol = (parseFloat(w.reps) * parseFloat(w.weight)).toFixed(1);
       const tr = document.createElement("tr");
@@ -92,10 +124,8 @@ async function loadLastSession() {
       `;
       tbody.appendChild(tr);
     });
-
     wrap.style.display = "block";
   } catch (err) {
-    console.error("Error loading last session:", err);
     wrap.style.display = "none";
   }
 }
@@ -122,36 +152,29 @@ async function addWorkout() {
     body: JSON.stringify(workout)
   });
 
-  // Clear inputs
   document.getElementById("reps").value = "";
   document.getElementById("weight").value = "";
   notesInput.value = "";
 
+  allWorkoutsCache = []; // invalidate cache
   loadWorkouts();
   loadLastSession();
+  loadExerciseHistory();
 }
 
 // ===== Load all workouts =====
 async function loadWorkouts() {
   const res = await fetch(`/workouts`);
-
-  if (!res.ok) {
-    console.error("Failed to load workouts:", res.status, await res.text());
-    return;
-  }
-
+  if (!res.ok) { console.error("Failed to load workouts:", res.status); return; }
   const data = await res.json();
-  if (!Array.isArray(data)) {
-    console.error("Unexpected workouts response:", data);
-    return;
-  }
+  if (!Array.isArray(data)) return;
 
+  allWorkoutsCache = data; // keep cache fresh
   table.innerHTML = "";
 
   data.forEach(w => {
     const tr = document.createElement("tr");
     const volume = (parseFloat(w.reps) * parseFloat(w.weight)).toFixed(1);
-
     tr.innerHTML = `
       <td data-label="Date"><input type="date" value="${w.date.slice(0,10)}"></td>
       <td data-label="Day">${w.day}</td>
@@ -165,7 +188,6 @@ async function loadWorkouts() {
         <button class="delete-btn" onclick="deleteWorkout(${w.id})">Delete</button>
       </div></td>
     `;
-
     table.appendChild(tr);
   });
 }
@@ -184,6 +206,7 @@ async function updateWorkout(id, btn) {
     body: JSON.stringify({ date, reps, weight, notes })
   });
 
+  allWorkoutsCache = [];
   loadWorkouts();
   loadLastSession();
 }
@@ -191,6 +214,7 @@ async function updateWorkout(id, btn) {
 // ===== Delete workout =====
 async function deleteWorkout(id) {
   await fetch(`/workouts/${id}`, { method: "DELETE" });
+  allWorkoutsCache = [];
   loadWorkouts();
   loadLastSession();
 }
@@ -198,7 +222,6 @@ async function deleteWorkout(id) {
 // ===== Export to Excel =====
 function exportToExcel() {
   const rows = [["Date", "Day", "Exercise", "Reps", "Weight", "Volume", "Notes"]];
-
   document.querySelectorAll("#workoutTable tr").forEach(tr => {
     const cells = tr.children;
     const date = cells[0].querySelector("input")?.value || "";
@@ -210,7 +233,6 @@ function exportToExcel() {
     const notes = cells[6].querySelector("input")?.value || "";
     rows.push([date, day, exercise, reps, weight, volume, notes]);
   });
-
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Workouts");
