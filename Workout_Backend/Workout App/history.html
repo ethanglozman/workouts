@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Workout History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>📅 History</h2>
+      <div style="display:flex;gap:8px;">
+        <a href="/index.html" class="logout-btn" style="text-decoration:none;">← Back</a>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="form-card">
+      <div class="form-row">
+        <select id="filterDay" onchange="onFilterChange()">
+          <option value="">All Days</option>
+          <option value="Push">Push</option>
+          <option value="Pull">Pull</option>
+          <option value="Legs">Legs</option>
+          <option value="Core">Core</option>
+        </select>
+        <select id="filterExercise" onchange="onFilterChange()">
+          <option value="">All Exercises</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="field-label">From</label>
+          <input type="date" id="filterFrom" onchange="onFilterChange()">
+        </div>
+        <div>
+          <label class="field-label">To</label>
+          <input type="date" id="filterTo" onchange="onFilterChange()">
+        </div>
+      </div>
+      <button class="clear-btn" onclick="clearFilters()">Clear Filters</button>
+    </div>
+
+    <!-- Summary -->
+    <div id="summaryBar" class="summary-bar" style="display:none;"></div>
+
+    <!-- Results grouped by date -->
+    <div id="historyResults"></div>
+  </div>
+
+  <script>
+    async function checkLogin() {
+      const res = await fetch("/me");
+      if (!res.ok) window.location.href = "/login.html";
+    }
+    checkLogin();
+
+    async function logout() {
+      await fetch("/logout", { method: "POST" });
+      window.location.href = "/login.html";
+    }
+
+    let allWorkouts = [];
+
+    async function loadAll() {
+      const res = await fetch("/workouts");
+      if (!res.ok) return;
+      allWorkouts = await res.json();
+      populateExerciseDropdown();
+      render();
+    }
+
+    function populateExerciseDropdown(day = "") {
+      const sel = document.getElementById("filterExercise");
+      const current = sel.value;
+      const exercises = [...new Set(
+        allWorkouts
+          .filter(w => !day || w.day === day)
+          .map(w => w.exercise)
+      )].sort();
+
+      sel.innerHTML = '<option value="">All Exercises</option>';
+      exercises.forEach(e => {
+        const opt = document.createElement("option");
+        opt.value = e;
+        opt.textContent = e;
+        if (e === current) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    function onFilterChange() {
+      const day = document.getElementById("filterDay").value;
+      populateExerciseDropdown(day);
+      render();
+    }
+
+    function clearFilters() {
+      document.getElementById("filterDay").value = "";
+      document.getElementById("filterExercise").value = "";
+      document.getElementById("filterFrom").value = "";
+      document.getElementById("filterTo").value = "";
+      populateExerciseDropdown();
+      render();
+    }
+
+    function render() {
+      const day = document.getElementById("filterDay").value;
+      const exercise = document.getElementById("filterExercise").value;
+      const from = document.getElementById("filterFrom").value;
+      const to = document.getElementById("filterTo").value;
+
+      let filtered = allWorkouts.filter(w => {
+        if (day && w.day !== day) return false;
+        if (exercise && w.exercise !== exercise) return false;
+        if (from && w.date.slice(0,10) < from) return false;
+        if (to && w.date.slice(0,10) > to) return false;
+        return true;
+      });
+
+      // Summary bar
+      const summaryBar = document.getElementById("summaryBar");
+      if (filtered.length > 0) {
+        const totalVol = filtered.reduce((s, w) => s + parseFloat(w.reps) * parseFloat(w.weight), 0);
+        const totalSets = filtered.length;
+        const days = new Set(filtered.map(w => w.date.slice(0,10))).size;
+        summaryBar.innerHTML = `<span>${totalSets} sets</span><span>${days} sessions</span><span>${totalVol.toLocaleString(undefined, {maximumFractionDigits:1})} lbs total vol</span>`;
+        summaryBar.style.display = "flex";
+      } else {
+        summaryBar.style.display = "none";
+      }
+
+      // Group by date
+      const byDate = {};
+      filtered.forEach(w => {
+        const d = w.date.slice(0,10);
+        if (!byDate[d]) byDate[d] = [];
+        byDate[d].push(w);
+      });
+
+      const container = document.getElementById("historyResults");
+      container.innerHTML = "";
+
+      const sortedDates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
+
+      if (sortedDates.length === 0) {
+        container.innerHTML = '<p style="color:#aaa;text-align:center;padding:40px 0;">No workouts found</p>';
+        return;
+      }
+
+      sortedDates.forEach(date => {
+        const entries = byDate[date];
+        const dayLabel = entries[0].day;
+        const dateVol = entries.reduce((s,w) => s + parseFloat(w.reps)*parseFloat(w.weight), 0);
+
+        const section = document.createElement("div");
+        section.className = "history-section";
+
+        section.innerHTML = `
+          <div class="history-date-header">
+            <span class="history-date">${formatDate(date)}</span>
+            <span class="history-day-tag ${dayLabel.toLowerCase()}">${dayLabel}</span>
+            <span class="history-vol">${dateVol.toLocaleString(undefined,{maximumFractionDigits:1})} lbs</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Exercise</th><th>Reps</th><th>Wt</th><th>Vol</th><th>Notes</th></tr></thead>
+              <tbody>
+                ${entries.map(w => {
+                  const vol = (parseFloat(w.reps)*parseFloat(w.weight)).toFixed(1);
+                  return `<tr>
+                    <td data-label="Exercise">${w.exercise}</td>
+                    <td data-label="Reps">${w.reps}</td>
+                    <td data-label="Wt">${w.weight}</td>
+                    <td data-label="Vol">${vol}</td>
+                    <td data-label="Notes">${w.notes || ''}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        container.appendChild(section);
+      });
+    }
+
+    function formatDate(d) {
+      const date = new Date(d + "T00:00:00");
+      return date.toLocaleDateString("en-CA", { weekday: "short", year: "numeric", month: "short", day: "numeric" });
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>
