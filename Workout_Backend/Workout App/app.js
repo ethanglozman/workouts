@@ -15,7 +15,11 @@ const exerciseSelect = document.getElementById("exerciseSelect");
 const table = document.getElementById("workoutTable");
 const notesInput = document.getElementById("notes");
 
-dateInput.value = new Date().toISOString().slice(0, 10);
+const today = new Date().toISOString().slice(0, 10);
+dateInput.value = today;
+
+// Track which date we're showing in the live table
+let activeDate = today;
 
 daySelect.addEventListener("change", () => {
   loadExercises();
@@ -25,6 +29,11 @@ daySelect.addEventListener("change", () => {
 
 exerciseSelect.addEventListener("change", () => {
   loadExerciseHistory();
+});
+
+dateInput.addEventListener("change", () => {
+  activeDate = dateInput.value;
+  loadCurrentTable();
 });
 
 // ===== Exercises dropdown =====
@@ -49,8 +58,16 @@ async function loadExercises() {
   }
 }
 
-// ===== Mini exercise history (shown when exercise is selected) =====
+// ===== Mini exercise history =====
 let allWorkoutsCache = [];
+
+async function ensureCache() {
+  if (allWorkoutsCache.length === 0) {
+    const res = await fetch("/workouts");
+    if (!res.ok) return;
+    allWorkoutsCache = await res.json();
+  }
+}
 
 async function loadExerciseHistory() {
   const exercise = exerciseSelect.value;
@@ -59,17 +76,9 @@ async function loadExerciseHistory() {
 
   if (!exercise) { wrap.style.display = "none"; return; }
 
-  // Use cache if available, otherwise fetch
-  if (allWorkoutsCache.length === 0) {
-    const res = await fetch("/workouts");
-    if (!res.ok) { wrap.style.display = "none"; return; }
-    allWorkoutsCache = await res.json();
-  }
+  await ensureCache();
 
-  const history = allWorkoutsCache
-    .filter(w => w.exercise === exercise)
-    .slice(0, 10); // last 10 sets
-
+  const history = allWorkoutsCache.filter(w => w.exercise === exercise).slice(0, 10);
   if (history.length === 0) { wrap.style.display = "none"; return; }
 
   list.innerHTML = "";
@@ -93,6 +102,7 @@ async function loadExerciseHistory() {
 function clearExerciseHistory() {
   document.getElementById("exerciseHistoryWrap").style.display = "none";
   document.getElementById("exerciseHistoryList").innerHTML = "";
+  allWorkoutsCache = [];
 }
 
 // ===== Last session for selected day =====
@@ -130,6 +140,68 @@ async function loadLastSession() {
   }
 }
 
+// ===== Current table: today's sets + last 5 on first load =====
+async function loadCurrentTable() {
+  await ensureCache();
+
+  const todaySets = allWorkoutsCache.filter(w => w.date.slice(0,10) === activeDate);
+
+  // If no sets today yet, show last 5 across all days as a reference
+  const toShow = todaySets.length > 0
+    ? todaySets
+    : allWorkoutsCache.slice(0, 5);
+
+  const sectionLabel = document.querySelector(".section-label:last-of-type");
+  if (sectionLabel) {
+    sectionLabel.textContent = todaySets.length > 0
+      ? `📝 ${activeDate === today ? "Today's" : dateInput.value} sets`
+      : "📝 Last 5 sets";
+  }
+
+  renderTable(toShow, todaySets.length > 0);
+}
+
+function renderTable(data, showActions) {
+  table.innerHTML = "";
+
+  if (data.length === 0) {
+    table.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#bbb;padding:24px;">No sets yet — add your first one above!</td></tr>`;
+    return;
+  }
+
+  data.forEach(w => {
+    const tr = document.createElement("tr");
+    const volume = (parseFloat(w.reps) * parseFloat(w.weight)).toFixed(1);
+
+    if (showActions) {
+      tr.innerHTML = `
+        <td data-label="Exercise">${w.exercise}</td>
+        <td data-label="Reps"><input type="number" value="${w.reps}" step="1"></td>
+        <td data-label="Wt"><input type="number" value="${w.weight}" step="0.5"></td>
+        <td data-label="Vol">${volume}</td>
+        <td data-label="Notes"><input type="text" value="${w.notes || ''}" placeholder="notes"></td>
+        <td class="actions-cell"><div class="actions">
+          <button class="save-btn" onclick="updateWorkout(${w.id}, this)">Save</button>
+          <button class="delete-btn" onclick="deleteWorkout(${w.id})">Del</button>
+        </div></td>
+      `;
+    } else {
+      // Read-only last 5
+      tr.innerHTML = `
+        <td data-label="Exercise">${w.exercise}</td>
+        <td data-label="Reps">${w.reps}</td>
+        <td data-label="Wt">${w.weight}</td>
+        <td data-label="Vol">${volume}</td>
+        <td data-label="Notes">${w.notes || ''}</td>
+        <td></td>
+      `;
+      tr.style.opacity = "0.6";
+    }
+
+    table.appendChild(tr);
+  });
+}
+
 // ===== Add workout =====
 async function addWorkout() {
   const workout = {
@@ -156,82 +228,46 @@ async function addWorkout() {
   document.getElementById("weight").value = "";
   notesInput.value = "";
 
-  allWorkoutsCache = []; // invalidate cache
-  loadWorkouts();
+  allWorkoutsCache = [];
+  await ensureCache();
+  loadCurrentTable();
   loadLastSession();
   loadExerciseHistory();
-}
-
-// ===== Load all workouts =====
-async function loadWorkouts() {
-  const res = await fetch(`/workouts`);
-  if (!res.ok) { console.error("Failed to load workouts:", res.status); return; }
-  const data = await res.json();
-  if (!Array.isArray(data)) return;
-
-  allWorkoutsCache = data; // keep cache fresh
-  table.innerHTML = "";
-
-  data.forEach(w => {
-    const tr = document.createElement("tr");
-    const volume = (parseFloat(w.reps) * parseFloat(w.weight)).toFixed(1);
-    tr.innerHTML = `
-      <td data-label="Date"><input type="date" value="${w.date.slice(0,10)}"></td>
-      <td data-label="Day">${w.day}</td>
-      <td data-label="Exercise">${w.exercise}</td>
-      <td data-label="Reps"><input type="number" value="${w.reps}" step="1"></td>
-      <td data-label="Wt"><input type="number" value="${w.weight}" step="0.5"></td>
-      <td data-label="Vol">${volume}</td>
-      <td data-label="Notes"><input type="text" value="${w.notes || ''}" placeholder="notes"></td>
-      <td class="actions-cell"><div class="actions">
-        <button class="save-btn" onclick="updateWorkout(${w.id}, this)">Save</button>
-        <button class="delete-btn" onclick="deleteWorkout(${w.id})">Delete</button>
-      </div></td>
-    `;
-    table.appendChild(tr);
-  });
 }
 
 // ===== Update workout =====
 async function updateWorkout(id, btn) {
   const row = btn.closest("tr");
-  const date = row.children[0].querySelector("input").value;
-  const reps = row.children[3].querySelector("input").value;
-  const weight = row.children[4].querySelector("input").value;
-  const notes = row.children[6].querySelector("input").value;
+  const reps = row.children[1].querySelector("input").value;
+  const weight = row.children[2].querySelector("input").value;
+  const notes = row.children[4].querySelector("input").value;
 
   await fetch(`/workouts/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ date, reps, weight, notes })
+    body: JSON.stringify({ reps, weight, notes })
   });
 
   allWorkoutsCache = [];
-  loadWorkouts();
-  loadLastSession();
+  await ensureCache();
+  loadCurrentTable();
 }
 
 // ===== Delete workout =====
 async function deleteWorkout(id) {
   await fetch(`/workouts/${id}`, { method: "DELETE" });
   allWorkoutsCache = [];
-  loadWorkouts();
+  await ensureCache();
+  loadCurrentTable();
   loadLastSession();
 }
 
 // ===== Export to Excel =====
 function exportToExcel() {
   const rows = [["Date", "Day", "Exercise", "Reps", "Weight", "Volume", "Notes"]];
-  document.querySelectorAll("#workoutTable tr").forEach(tr => {
-    const cells = tr.children;
-    const date = cells[0].querySelector("input")?.value || "";
-    const day = cells[1].textContent.trim();
-    const exercise = cells[2].textContent.trim();
-    const reps = parseFloat(cells[3].querySelector("input")?.value || 0);
-    const weight = parseFloat(cells[4].querySelector("input")?.value || 0);
-    const volume = (reps * weight).toFixed(1);
-    const notes = cells[6].querySelector("input")?.value || "";
-    rows.push([date, day, exercise, reps, weight, volume, notes]);
+  allWorkoutsCache.forEach(w => {
+    const vol = (parseFloat(w.reps) * parseFloat(w.weight)).toFixed(1);
+    rows.push([w.date.slice(0,10), w.day, w.exercise, w.reps, w.weight, vol, w.notes || ""]);
   });
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -239,4 +275,5 @@ function exportToExcel() {
   XLSX.writeFile(wb, "workouts.xlsx");
 }
 
-loadWorkouts();
+// ===== Init =====
+ensureCache().then(() => loadCurrentTable());
