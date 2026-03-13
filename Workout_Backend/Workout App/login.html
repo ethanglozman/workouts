@@ -20,6 +20,7 @@
 
     <select id="username" class="input">
       <option value="" data-i18n="Choose user...">Choose user...</option>
+      <option value="Ethan">Alon</option>
       <option value="Ethan">Ethan</option>
       <option value="George">George</option>
       <option value="Hubert">Hubert</option>
@@ -35,20 +36,6 @@
   </div>
 
   <script>
-    async function setLang(lang) {
-      await fetch("/language", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang })
-      });
-      // Re-apply translations with new language
-      applyTranslations();
-      // Highlight active flag
-      document.querySelectorAll(".lang-picker button").forEach(btn => {
-        btn.classList.toggle("lang-active", btn.getAttribute("onclick") === `setLang('${lang}')`);
-      });
-    }
-
     async function login() {
       const username = document.getElementById("username").value;
       const errorEl = document.getElementById("error");
@@ -72,15 +59,6 @@
       }
     }
 
-    // Highlight current language on load
-    async function highlightCurrentLang() {
-      const res = await fetch("/language");
-      const { lang } = await res.json();
-      document.querySelectorAll(".lang-picker button").forEach(btn => {
-        btn.classList.toggle("lang-active", btn.getAttribute("onclick") === `setLang('${lang}')`);
-      });
-    }
-    highlightCurrentLang();
   </script>
   <script src="i18n.js"></script>
 </body>
