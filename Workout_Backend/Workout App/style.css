@@ -504,3 +504,40 @@ td input[type="text"] {
   color: #444;
   white-space: nowrap;
 }
+
+/* ===== History mobile tweaks ===== */
+@media (max-width: 600px) {
+  .history-date-header {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .history-vol {
+    margin-left: 0;
+    width: 100%;
+    color: #aaa;
+  }
+
+  .history-section {
+    margin-bottom: 28px;
+  }
+
+  /* History rows: exercise takes full width, rest split 2-col */
+  .history-section tbody tr {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .history-section tbody tr td:first-child {
+    grid-column: 1 / -1;
+    font-weight: 600;
+    font-size: 15px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 4px;
+  }
+
+  .history-section tbody tr td:first-child::before {
+    display: none;
+  }
+}
