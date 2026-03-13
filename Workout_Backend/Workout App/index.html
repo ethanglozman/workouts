@@ -8,14 +8,14 @@
 <body>
   <div class="container">
     <div class="header">
-      <h2>💪 Workout Tracker</h2>
+      <h2 data-i18n="💪 Workout Tracker">💪 Workout Tracker</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-        <a href="/history.html" class="logout-btn" style="text-decoration:none;">📅 History</a>
-        <a href="/cardio.html" class="logout-btn" style="text-decoration:none;">🏃 Cardio</a>
-        <a href="/add-exercise.html" class="logout-btn" style="text-decoration:none;">➕ Exercise</a>
+        <a href="/history.html" class="logout-btn" style="text-decoration:none;" data-i18n="📅 History">📅 History</a>
+        <a href="/cardio.html" class="logout-btn" style="text-decoration:none;" data-i18n="🏃 Cardio">🏃 Cardio</a>
+        <a href="/add-exercise.html" class="logout-btn" style="text-decoration:none;" data-i18n="➕ Exercise">➕ Exercise</a>
         <button class="export-btn" onclick="exportToExcel()">📥</button>
         <button class="bug-btn" onclick="reportBug()">🐛</button>
-        <button class="logout-btn" onclick="logout()">Logout</button>
+        <button class="logout-btn" onclick="logout()" data-i18n="Logout">Logout</button>
       </div>
     </div>
 
@@ -23,45 +23,48 @@
       <div class="form-row">
         <input type="date" id="dateInput">
         <select id="daySelect">
-          <option value="">Select Day</option>
-          <option value="Push">Push</option>
-          <option value="Pull">Pull</option>
-          <option value="Legs">Legs</option>
-          <option value="Core">Core</option>
+          <option value="" data-i18n="Select Day">Select Day</option>
+          <option value="Push" data-i18n="Push">Push</option>
+          <option value="Pull" data-i18n="Pull">Pull</option>
+          <option value="Legs" data-i18n="Legs">Legs</option>
+          <option value="Core" data-i18n="Core">Core</option>
         </select>
       </div>
 
       <select id="exerciseSelect">
-        <option value="">Select Exercise</option>
+        <option value="" data-i18n="Select Exercise">Select Exercise</option>
       </select>
 
-      <!-- Mini exercise history -->
       <div id="exerciseHistoryWrap" style="display:none;">
-        <div class="mini-history-label">📈 Last times you did this</div>
+        <div class="mini-history-label" data-i18n="📈 Last times you did this">📈 Last times you did this</div>
         <div id="exerciseHistoryList" class="mini-history-list"></div>
       </div>
 
       <div class="form-row">
-        <input type="number" id="reps" placeholder="Reps" inputmode="decimal" step="1">
-        <input type="number" id="weight" placeholder="Weight (lbs)" inputmode="decimal" step="0.5">
+        <input type="number" id="reps" data-i18n-placeholder="Reps" placeholder="Reps" inputmode="decimal" step="1">
+        <input type="number" id="weight" data-i18n-placeholder="Weight (lbs)" placeholder="Weight (lbs)" inputmode="decimal" step="0.5">
       </div>
 
-      <textarea id="notes" placeholder="Notes (optional)" rows="2"></textarea>
+      <textarea id="notes" data-i18n-placeholder="Notes (optional)" placeholder="Notes (optional)" rows="2"></textarea>
 
-      <button onclick="addWorkout()">+ Add Set</button>
+      <button onclick="addWorkout()" data-i18n="+ Add Set">+ Add Set</button>
     </div>
 
-    <!-- Today's sets only — no last session panel -->
-    <div id="todayWrap">
-      <div class="section-label" id="todayLabel">📝 Today's sets</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Exercise</th><th>Reps</th><th>Wt</th><th>Vol</th><th>Notes</th><th></th></tr>
-          </thead>
-          <tbody id="workoutTable"></tbody>
-        </table>
-      </div>
+    <div class="section-label" id="todayLabel" data-i18n="📝 Today's sets">📝 Today's sets</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="Exercise">Exercise</th>
+            <th data-i18n="Reps">Reps</th>
+            <th data-i18n="Wt">Wt</th>
+            <th data-i18n="Vol">Vol</th>
+            <th data-i18n="Notes">Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="workoutTable"></tbody>
+      </table>
     </div>
   </div>
 
@@ -72,5 +75,6 @@
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="app.js"></script>
+  <script src="i18n.js"></script>
 </body>
 </html>
