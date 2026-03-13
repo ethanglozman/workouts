@@ -8,10 +8,10 @@
 <body>
   <div class="container">
     <div class="header">
-      <h2>🏃 Cardio</h2>
+      <h2 data-i18n="🏃 Cardio">🏃 Cardio</h2>
       <div style="display:flex;gap:8px;">
-        <a href="/index.html" class="logout-btn" style="text-decoration:none;">← Back</a>
-        <button class="logout-btn" onclick="logout()">Logout</button>
+        <a href="/index.html" class="logout-btn" style="text-decoration:none;" data-i18n="← Back">← Back</a>
+        <button class="logout-btn" onclick="logout()" data-i18n="Logout">Logout</button>
       </div>
     </div>
 
@@ -32,23 +32,23 @@
 
       <div class="form-row">
         <div>
-          <label class="field-label">Duration (min)</label>
+          <label class="field-label" data-i18n="Duration (min)">Duration (min)</label>
           <input type="number" id="cardioDuration" placeholder="30" inputmode="numeric" step="1">
         </div>
         <div>
-          <label class="field-label">Speed / Level</label>
+          <label class="field-label" data-i18n="Speed / Level">Speed / Level</label>
           <input type="number" id="cardioSpeed" placeholder="e.g. 8" inputmode="decimal" step="0.1">
         </div>
       </div>
 
       <div>
-        <label class="field-label">Distance (km)</label>
+        <label class="field-label" data-i18n="Distance (km)">Distance (km)</label>
         <input type="number" id="cardioDistance" placeholder="optional" inputmode="decimal" step="0.01">
       </div>
 
-      <textarea id="cardioNotes" placeholder="Notes (optional)" rows="2"></textarea>
+      <textarea id="cardioNotes" placeholder="Notes (optional)" data-i18n-placeholder="Notes (optional)" rows="2"></textarea>
 
-      <button onclick="addCardio()">+ Log Cardio</button>
+      <button onclick="addCardio()" data-i18n="+ Log Cardio">+ Log Cardio</button>
     </div>
 
     <div class="section-label" id="cardioLabel">📝 Today's cardio</div>
@@ -117,7 +117,7 @@
       const todayEntries = data.filter(c => c.date.slice(0,10) === activeDate);
 
       const label = document.getElementById("cardioLabel");
-      label.textContent = activeDate === today ? "📝 Today's cardio" : `📝 Cardio — ${activeDate}`;
+      label.textContent = activeDate === today ? window.i18nT("📝 Today's cardio") : `📝 Cardio — ${activeDate}`;
 
       const list = document.getElementById("cardioList");
       list.innerHTML = "";
@@ -136,10 +136,10 @@
             <button class="delete-btn" style="width:auto;padding:6px 12px;font-size:13px;" onclick="deleteCardio(${c.id})">Del</button>
           </div>
           <div class="cardio-stats">
-            <div class="cardio-stat"><span class="cardio-stat-label">Duration</span><span>${c.duration} min</span></div>
-            ${c.speed    ? `<div class="cardio-stat"><span class="cardio-stat-label">Speed/Lvl</span><span>${c.speed}</span></div>` : ''}
-            ${c.distance ? `<div class="cardio-stat"><span class="cardio-stat-label">Distance</span><span>${c.distance} km</span></div>` : ''}
-            ${c.notes    ? `<div class="cardio-stat" style="grid-column:1/-1"><span class="cardio-stat-label">Notes</span><span>${c.notes}</span></div>` : ''}
+            <div class="cardio-stat"><span class="cardio-stat-label">${window.i18nT("Duration (min)")}</span><span>${c.duration} min</span></div>
+            ${c.speed    ? `<div class="cardio-stat"><span class="cardio-stat-label">${window.i18nT("Speed / Level")}</span><span>${c.speed}</span></div>` : ''}
+            ${c.distance ? `<div class="cardio-stat"><span class="cardio-stat-label">${window.i18nT("Distance (km)")}</span><span>${c.distance} km</span></div>` : ''}
+            ${c.notes    ? `<div class="cardio-stat" style="grid-column:1/-1"><span class="cardio-stat-label">${window.i18nT("Notes")}</span><span>${c.notes}</span></div>` : ''}
           </div>
         `;
         list.appendChild(card);
