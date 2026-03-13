@@ -11,8 +11,9 @@
       <h2>💪 Workout Tracker</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
         <a href="/history.html" class="logout-btn" style="text-decoration:none;">📅 History</a>
-        <button class="export-btn" onclick="exportToExcel()">📥 Export</button>
-        <button class="bug-btn" onclick="reportBug()">🐛 Bug</button>
+        <a href="/add-exercise.html" class="logout-btn" style="text-decoration:none;">➕ Exercise</a>
+        <button class="export-btn" onclick="exportToExcel()">📥</button>
+        <button class="bug-btn" onclick="reportBug()">🐛</button>
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
     </div>
@@ -44,34 +45,22 @@
         <input type="number" id="weight" placeholder="Weight (lbs)" inputmode="decimal" step="0.5">
       </div>
 
-      <textarea id="notes" placeholder="Notes (optional — e.g. paused reps, injury mod...)" rows="2"></textarea>
+      <textarea id="notes" placeholder="Notes (optional)" rows="2"></textarea>
 
       <button onclick="addWorkout()">+ Add Set</button>
     </div>
 
-    <!-- Last session for selected day -->
-    <div id="lastSessionWrap" style="display:none;">
-      <div class="section-label">📋 Last <span id="lastSessionDay"></span> session</div>
+    <!-- Today's sets only — no last session panel -->
+    <div id="todayWrap">
+      <div class="section-label" id="todayLabel">📝 Today's sets</div>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Exercise</th><th>Reps</th><th>Wt</th><th>Vol</th><th>Notes</th></tr>
+            <tr><th>Exercise</th><th>Reps</th><th>Wt</th><th>Vol</th><th>Notes</th><th></th></tr>
           </thead>
-          <tbody id="lastSessionTable"></tbody>
+          <tbody id="workoutTable"></tbody>
         </table>
       </div>
-    </div>
-
-    <div class="section-label">📝 Today's sets</div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Exercise</th><th>Reps</th><th>Wt</th><th>Vol</th><th>Notes</th><th></th>
-          </tr>
-        </thead>
-        <tbody id="workoutTable"></tbody>
-      </table>
     </div>
   </div>
 
