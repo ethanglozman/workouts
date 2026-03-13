@@ -583,3 +583,50 @@ td input[type="text"] {
   color: #aaa;
   letter-spacing: 0.04em;
 }
+
+/* ===== Language picker ===== */
+.lang-picker {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.lang-picker button {
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: 22px;
+  padding: 4px 6px;
+  cursor: pointer;
+  width: auto;
+  margin: 0;
+  line-height: 1;
+  transition: border-color 0.15s;
+}
+
+.lang-picker button:hover {
+  border-color: #ddd;
+  opacity: 1;
+}
+
+.lang-picker button.lang-active {
+  border-color: #111;
+}
+
+/* RTL support */
+[dir="rtl"] .header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .form-row {
+  direction: rtl;
+}
+
+[dir="rtl"] .mini-history-row {
+  direction: rtl;
+}
+
+[dir="rtl"] .actions {
+  flex-direction: row-reverse;
+}
