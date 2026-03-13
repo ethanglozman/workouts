@@ -47,35 +47,6 @@ function requireLogin(req, res, next) {
 // TRANSLATION
 // =============================
 
-// In-memory cache: { "fr:Hello": "Bonjour", ... }
-const translationCache = {};
-
-async function translateText(text, targetLang) {
-  if (targetLang === "en") return text;
-  const key = `${targetLang}:${text}`;
-  if (translationCache[key]) return translationCache[key];
-
-  try {
-    const response = await fetch("https://libretranslate.com/translate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        q: text,
-        source: "en",
-        target: targetLang,
-        format: "text"
-      })
-    });
-    const data = await response.json();
-    const translated = data.translatedText || text;
-    translationCache[key] = translated;
-    return translated;
-  } catch (err) {
-    console.error("Translation error:", err.message);
-    return text; // fallback to English
-  }
-}
-
 // Set language
 app.post("/language", (req, res) => {
   const { lang } = req.body;
@@ -88,26 +59,6 @@ app.post("/language", (req, res) => {
 // Get current language
 app.get("/language", (req, res) => {
   res.json({ lang: req.session.lang || "en" });
-});
-
-// Translate a batch of strings
-app.post("/translate", async (req, res) => {
-  const { strings } = req.body; // array of strings
-  const lang = req.session.lang || "en";
-
-  if (lang === "en") {
-    return res.json({ lang, translations: strings.reduce((acc, s) => ({ ...acc, [s]: s }), {}) });
-  }
-
-  try {
-    const entries = await Promise.all(
-      strings.map(async s => [s, await translateText(s, lang)])
-    );
-    const translations = Object.fromEntries(entries);
-    res.json({ lang, translations });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
 });
 
 // =============================
