@@ -1,55 +1,74 @@
-// ===== i18n.js — load and apply translations =====
-// Add data-i18n="Your English text" to any element you want translated.
-// This script collects all those strings, fetches translations, and swaps them in.
+// ===== i18n.js — translations + language picker =====
 
 const RTL_LANGS = ["he"];
 
 async function applyTranslations() {
-  // Collect all translatable strings from the page
   const elements = document.querySelectorAll("[data-i18n]");
-  const strings = [...new Set([...elements].map(el => el.getAttribute("data-i18n")))];
-
-  // Also collect placeholder strings
   const placeholderEls = document.querySelectorAll("[data-i18n-placeholder]");
-  const placeholderStrings = [...new Set([...placeholderEls].map(el => el.getAttribute("data-i18n-placeholder")))];
 
-  const allStrings = [...new Set([...strings, ...placeholderStrings])];
-  if (allStrings.length === 0) return;
+  const strings = [...new Set([
+    ...[...elements].map(el => el.getAttribute("data-i18n")),
+    ...[...placeholderEls].map(el => el.getAttribute("data-i18n-placeholder"))
+  ])];
+
+  if (strings.length === 0) return;
 
   try {
     const res = await fetch("/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ strings: allStrings })
+      body: JSON.stringify({ strings })
     });
 
     if (!res.ok) return;
     const { lang, translations } = await res.json();
 
-    // Apply RTL for Hebrew
-    if (RTL_LANGS.includes(lang)) {
-      document.documentElement.setAttribute("dir", "rtl");
-      document.documentElement.setAttribute("lang", lang);
-    } else {
-      document.documentElement.setAttribute("dir", "ltr");
-      document.documentElement.setAttribute("lang", lang);
-    }
+    // RTL for Hebrew
+    document.documentElement.setAttribute("dir", RTL_LANGS.includes(lang) ? "rtl" : "ltr");
+    document.documentElement.setAttribute("lang", lang);
 
-    // Apply text translations
     elements.forEach(el => {
       const key = el.getAttribute("data-i18n");
       if (translations[key]) el.textContent = translations[key];
     });
 
-    // Apply placeholder translations
     placeholderEls.forEach(el => {
       const key = el.getAttribute("data-i18n-placeholder");
       if (translations[key]) el.placeholder = translations[key];
     });
+
+    // Update active flag highlight
+    highlightActiveLang(lang);
 
   } catch (err) {
     console.error("i18n error:", err);
   }
 }
 
+async function setLang(lang) {
+  await fetch("/language", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ lang })
+  });
+  applyTranslations();
+}
+
+function highlightActiveLang(lang) {
+  document.querySelectorAll(".lang-picker button").forEach(btn => {
+    const match = btn.getAttribute("onclick") === `setLang('${lang}')`;
+    btn.classList.toggle("lang-active", match);
+  });
+}
+
+async function highlightCurrentLang() {
+  try {
+    const res = await fetch("/language");
+    const { lang } = await res.json();
+    highlightActiveLang(lang);
+  } catch (err) {}
+}
+
+// Run on every page load
+highlightCurrentLang();
 applyTranslations();
