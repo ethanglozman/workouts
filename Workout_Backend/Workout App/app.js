@@ -14,22 +14,18 @@ const daySelect = document.getElementById("daySelect");
 const exerciseSelect = document.getElementById("exerciseSelect");
 const table = document.getElementById("workoutTable");
 const notesInput = document.getElementById("notes");
+const todayLabel = document.getElementById("todayLabel");
 
 const today = new Date().toISOString().slice(0, 10);
 dateInput.value = today;
-
-// Track which date we're showing in the live table
 let activeDate = today;
 
 daySelect.addEventListener("change", () => {
   loadExercises();
-  loadLastSession();
   clearExerciseHistory();
 });
 
-exerciseSelect.addEventListener("change", () => {
-  loadExerciseHistory();
-});
+exerciseSelect.addEventListener("change", loadExerciseHistory);
 
 dateInput.addEventListener("change", () => {
   activeDate = dateInput.value;
@@ -58,7 +54,7 @@ async function loadExercises() {
   }
 }
 
-// ===== Mini exercise history =====
+// ===== Cache =====
 let allWorkoutsCache = [];
 
 async function ensureCache() {
@@ -69,6 +65,7 @@ async function ensureCache() {
   }
 }
 
+// ===== Mini exercise history =====
 async function loadExerciseHistory() {
   const exercise = exerciseSelect.value;
   const wrap = document.getElementById("exerciseHistoryWrap");
@@ -78,7 +75,11 @@ async function loadExerciseHistory() {
 
   await ensureCache();
 
-  const history = allWorkoutsCache.filter(w => w.exercise === exercise).slice(0, 10);
+  // Only show history from PREVIOUS dates, not today
+  const history = allWorkoutsCache
+    .filter(w => w.exercise === exercise && w.date.slice(0,10) !== activeDate)
+    .slice(0, 8);
+
   if (history.length === 0) { wrap.style.display = "none"; return; }
 
   list.innerHTML = "";
@@ -105,98 +106,42 @@ function clearExerciseHistory() {
   allWorkoutsCache = [];
 }
 
-// ===== Last session for selected day =====
-async function loadLastSession() {
-  const day = daySelect.value;
-  const wrap = document.getElementById("lastSessionWrap");
-  const tbody = document.getElementById("lastSessionTable");
-  const label = document.getElementById("lastSessionDay");
-
-  if (!day) { wrap.style.display = "none"; return; }
-
-  try {
-    const res = await fetch(`/workouts/last-session/${day}`);
-    if (!res.ok) { wrap.style.display = "none"; return; }
-    const data = await res.json();
-    if (!data || data.length === 0) { wrap.style.display = "none"; return; }
-
-    label.textContent = day;
-    tbody.innerHTML = "";
-    data.forEach(w => {
-      const vol = (parseFloat(w.reps) * parseFloat(w.weight)).toFixed(1);
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td data-label="Exercise">${w.exercise}</td>
-        <td data-label="Reps">${w.reps}</td>
-        <td data-label="Wt">${w.weight}</td>
-        <td data-label="Vol">${vol}</td>
-        <td data-label="Notes">${w.notes || ''}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-    wrap.style.display = "block";
-  } catch (err) {
-    wrap.style.display = "none";
-  }
-}
-
-// ===== Current table: today's sets + last 5 on first load =====
+// ===== Today's table =====
 async function loadCurrentTable() {
   await ensureCache();
 
   const todaySets = allWorkoutsCache.filter(w => w.date.slice(0,10) === activeDate);
+  const isToday = activeDate === today;
 
-  // If no sets today yet, show last 5 across all days as a reference
-  const toShow = todaySets.length > 0
-    ? todaySets
-    : allWorkoutsCache.slice(0, 5);
-
-  const sectionLabel = document.querySelector(".section-label:last-of-type");
-  if (sectionLabel) {
-    sectionLabel.textContent = todaySets.length > 0
-      ? `📝 ${activeDate === today ? "Today's" : dateInput.value} sets`
-      : "📝 Last 5 sets";
+  if (todaySets.length > 0) {
+    todayLabel.textContent = isToday ? "📝 Today's sets" : `📝 Sets — ${activeDate}`;
+    renderTable(todaySets, true);
+  } else {
+    todayLabel.textContent = isToday ? "📝 Today's sets" : `📝 Sets — ${activeDate}`;
+    table.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#bbb;padding:28px;font-size:15px;">No sets yet — add your first one above!</td></tr>`;
   }
-
-  renderTable(toShow, todaySets.length > 0);
 }
 
 function renderTable(data, showActions) {
   table.innerHTML = "";
 
-  if (data.length === 0) {
-    table.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#bbb;padding:24px;">No sets yet — add your first one above!</td></tr>`;
-    return;
-  }
-
   data.forEach(w => {
     const tr = document.createElement("tr");
     const volume = (parseFloat(w.reps) * parseFloat(w.weight)).toFixed(1);
+    // Clean up exercise name display
+    const exerciseName = w.exercise || "";
 
-    if (showActions) {
-      tr.innerHTML = `
-        <td data-label="Exercise">${w.exercise}</td>
-        <td data-label="Reps"><input type="number" value="${w.reps}" step="1"></td>
-        <td data-label="Wt"><input type="number" value="${w.weight}" step="0.5"></td>
-        <td data-label="Vol">${volume}</td>
-        <td data-label="Notes"><input type="text" value="${w.notes || ''}" placeholder="notes"></td>
-        <td class="actions-cell"><div class="actions">
-          <button class="save-btn" onclick="updateWorkout(${w.id}, this)">Save</button>
-          <button class="delete-btn" onclick="deleteWorkout(${w.id})">Del</button>
-        </div></td>
-      `;
-    } else {
-      // Read-only last 5
-      tr.innerHTML = `
-        <td data-label="Exercise">${w.exercise}</td>
-        <td data-label="Reps">${w.reps}</td>
-        <td data-label="Wt">${w.weight}</td>
-        <td data-label="Vol">${volume}</td>
-        <td data-label="Notes">${w.notes || ''}</td>
-        <td></td>
-      `;
-      tr.style.opacity = "0.6";
-    }
+    tr.innerHTML = `
+      <td data-label="Exercise" class="exercise-cell">${exerciseName}</td>
+      <td data-label="Reps"><input type="number" value="${w.reps}" step="1"></td>
+      <td data-label="Wt"><input type="number" value="${w.weight}" step="0.5"></td>
+      <td data-label="Vol">${volume}</td>
+      <td data-label="Notes"><input type="text" value="${w.notes || ''}" placeholder="—"></td>
+      <td class="actions-cell"><div class="actions">
+        <button class="save-btn" onclick="updateWorkout(${w.id}, this)">Save</button>
+        <button class="delete-btn" onclick="deleteWorkout(${w.id})">Del</button>
+      </div></td>
+    `;
 
     table.appendChild(tr);
   });
@@ -231,7 +176,6 @@ async function addWorkout() {
   allWorkoutsCache = [];
   await ensureCache();
   loadCurrentTable();
-  loadLastSession();
   loadExerciseHistory();
 }
 
@@ -259,10 +203,9 @@ async function deleteWorkout(id) {
   allWorkoutsCache = [];
   await ensureCache();
   loadCurrentTable();
-  loadLastSession();
 }
 
-// ===== Export to Excel =====
+// ===== Export =====
 function exportToExcel() {
   const rows = [["Date", "Day", "Exercise", "Reps", "Weight", "Volume", "Notes"]];
   allWorkoutsCache.forEach(w => {
@@ -275,5 +218,4 @@ function exportToExcel() {
   XLSX.writeFile(wb, "workouts.xlsx");
 }
 
-// ===== Init =====
 ensureCache().then(() => loadCurrentTable());
