@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cardio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>🏃 Cardio</h2>
+      <div style="display:flex;gap:8px;">
+        <a href="/index.html" class="logout-btn" style="text-decoration:none;">← Back</a>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-row">
+        <input type="date" id="cardioDate">
+        <select id="cardioType">
+          <option value="">Type...</option>
+          <option value="Stairmaster">Stairmaster</option>
+          <option value="Running">Running</option>
+          <option value="Treadmill">Treadmill</option>
+          <option value="Cycling">Cycling</option>
+          <option value="Elliptical">Elliptical</option>
+          <option value="Rowing">Rowing</option>
+          <option value="Jump Rope">Jump Rope</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="field-label">Duration (min)</label>
+          <input type="number" id="cardioDuration" placeholder="30" inputmode="numeric" step="1">
+        </div>
+        <div>
+          <label class="field-label">Speed / Level</label>
+          <input type="number" id="cardioSpeed" placeholder="e.g. 8" inputmode="decimal" step="0.1">
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Distance (km)</label>
+        <input type="number" id="cardioDistance" placeholder="optional" inputmode="decimal" step="0.01">
+      </div>
+
+      <textarea id="cardioNotes" placeholder="Notes (optional)" rows="2"></textarea>
+
+      <button onclick="addCardio()">+ Log Cardio</button>
+    </div>
+
+    <div class="section-label" id="cardioLabel">📝 Today's cardio</div>
+    <div id="cardioList"></div>
+  </div>
+
+  <script>
+    async function checkLogin() {
+      const res = await fetch("/me");
+      if (!res.ok) window.location.href = "/login.html";
+    }
+    checkLogin();
+
+    async function logout() {
+      await fetch("/logout", { method: "POST" });
+      window.location.href = "/login.html";
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById("cardioDate").value = today;
+
+    async function addCardio() {
+      const entry = {
+        date:     document.getElementById("cardioDate").value,
+        type:     document.getElementById("cardioType").value,
+        duration: document.getElementById("cardioDuration").value,
+        speed:    document.getElementById("cardioSpeed").value || null,
+        distance: document.getElementById("cardioDistance").value || null,
+        notes:    document.getElementById("cardioNotes").value.trim() || null
+      };
+
+      if (!entry.type || !entry.duration) {
+        alert("Please fill in type and duration.");
+        return;
+      }
+
+      const res = await fetch("/cardio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry)
+      });
+
+      if (res.ok) {
+        document.getElementById("cardioDuration").value = "";
+        document.getElementById("cardioSpeed").value = "";
+        document.getElementById("cardioDistance").value = "";
+        document.getElementById("cardioNotes").value = "";
+        loadCardio();
+      } else {
+        alert("Failed to save. Check console.");
+        console.error(await res.text());
+      }
+    }
+
+    async function deleteCardio(id) {
+      await fetch(`/cardio/${id}`, { method: "DELETE" });
+      loadCardio();
+    }
+
+    async function loadCardio() {
+      const res = await fetch("/cardio");
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const activeDate = document.getElementById("cardioDate").value;
+      const todayEntries = data.filter(c => c.date.slice(0,10) === activeDate);
+
+      const label = document.getElementById("cardioLabel");
+      label.textContent = activeDate === today ? "📝 Today's cardio" : `📝 Cardio — ${activeDate}`;
+
+      const list = document.getElementById("cardioList");
+      list.innerHTML = "";
+
+      if (todayEntries.length === 0) {
+        list.innerHTML = `<p style="text-align:center;color:#bbb;padding:28px;font-size:15px;">No cardio logged yet.</p>`;
+        return;
+      }
+
+      todayEntries.forEach(c => {
+        const card = document.createElement("div");
+        card.className = "cardio-card";
+        card.innerHTML = `
+          <div class="cardio-card-header">
+            <span class="cardio-type">${c.type}</span>
+            <button class="delete-btn" style="width:auto;padding:6px 12px;font-size:13px;" onclick="deleteCardio(${c.id})">Del</button>
+          </div>
+          <div class="cardio-stats">
+            <div class="cardio-stat"><span class="cardio-stat-label">Duration</span><span>${c.duration} min</span></div>
+            ${c.speed    ? `<div class="cardio-stat"><span class="cardio-stat-label">Speed/Lvl</span><span>${c.speed}</span></div>` : ''}
+            ${c.distance ? `<div class="cardio-stat"><span class="cardio-stat-label">Distance</span><span>${c.distance} km</span></div>` : ''}
+            ${c.notes    ? `<div class="cardio-stat" style="grid-column:1/-1"><span class="cardio-stat-label">Notes</span><span>${c.notes}</span></div>` : ''}
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    document.getElementById("cardioDate").addEventListener("change", loadCardio);
+
+    loadCardio();
+  </script>
+</body>
+</html>
