@@ -173,6 +173,51 @@ app.get("/workouts/last-session/:day", requireLogin, async (req, res) => {
   res.json(data);
 });
 
+
+// =============================
+// CARDIO ROUTES
+// =============================
+
+// Get cardio entries
+app.get("/cardio", requireLogin, async (req, res) => {
+  const { data, error } = await supabase
+    .from("cardio")
+    .select("*")
+    .eq("username", req.session.username)
+    .order("date", { ascending: false });
+
+  if (error) return res.status(500).json(error);
+  res.json(data);
+});
+
+// Add cardio entry
+app.post("/cardio", requireLogin, async (req, res) => {
+  const { date, type, duration, speed, distance, notes } = req.body;
+
+  const { error } = await supabase.from("cardio").insert([{
+    username: req.session.username,
+    date, type, duration,
+    speed:    speed    || null,
+    distance: distance || null,
+    notes:    notes    || null
+  }]);
+
+  if (error) return res.status(500).json(error);
+  res.json({ success: true });
+});
+
+// Delete cardio entry
+app.delete("/cardio/:id", requireLogin, async (req, res) => {
+  const { error } = await supabase
+    .from("cardio")
+    .delete()
+    .eq("id", req.params.id)
+    .eq("username", req.session.username);
+
+  if (error) return res.status(500).json(error);
+  res.json({ success: true });
+});
+
 // =============================
 // EXERCISE ROUTES (Admin Page)
 // =============================
