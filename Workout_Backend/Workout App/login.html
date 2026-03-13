@@ -7,12 +7,19 @@
 </head>
 <body class="centered-page">
   <div class="card">
-    <h2>💪 Workout Tracker</h2>
-    <p class="subtitle">Select your profile to continue</p>
+    <div class="lang-picker">
+      <button onclick="setLang('en')" title="English">🇬🇧</button>
+      <button onclick="setLang('fr')" title="French">🇫🇷</button>
+      <button onclick="setLang('de')" title="German">🇩🇪</button>
+      <button onclick="setLang('ru')" title="Russian">🇷🇺</button>
+      <button onclick="setLang('he')" title="Hebrew">🇮🇱</button>
+    </div>
+
+    <h2 data-i18n="💪 Workout Tracker">💪 Workout Tracker</h2>
+    <p class="subtitle" data-i18n="Select your profile to continue">Select your profile to continue</p>
 
     <select id="username" class="input">
-      <option value="">Choose user...</option>
-       <option value="Alon">Alon</option>
+      <option value="" data-i18n="Choose user...">Choose user...</option>
       <option value="Ethan">Ethan</option>
       <option value="George">George</option>
       <option value="Hubert">Hubert</option>
@@ -23,17 +30,31 @@
       <option value="Sebastian">Sebastian</option>
     </select>
 
-    <button onclick="login()" class="btn">Let's Go</button>
+    <button onclick="login()" class="btn" data-i18n="Let's Go">Let's Go</button>
     <p id="error" class="error"></p>
   </div>
 
   <script>
+    async function setLang(lang) {
+      await fetch("/language", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang })
+      });
+      // Re-apply translations with new language
+      applyTranslations();
+      // Highlight active flag
+      document.querySelectorAll(".lang-picker button").forEach(btn => {
+        btn.classList.toggle("lang-active", btn.getAttribute("onclick") === `setLang('${lang}')`);
+      });
+    }
+
     async function login() {
       const username = document.getElementById("username").value;
       const errorEl = document.getElementById("error");
 
       if (!username) {
-        errorEl.innerText = "Please select a user";
+        errorEl.textContent = "Please select a user";
         return;
       }
 
@@ -44,13 +65,23 @@
       });
 
       const data = await res.json();
-
       if (res.ok) {
         window.location.href = "/index.html";
       } else {
-        errorEl.innerText = data.error;
+        errorEl.textContent = data.error;
       }
     }
+
+    // Highlight current language on load
+    async function highlightCurrentLang() {
+      const res = await fetch("/language");
+      const { lang } = await res.json();
+      document.querySelectorAll(".lang-picker button").forEach(btn => {
+        btn.classList.toggle("lang-active", btn.getAttribute("onclick") === `setLang('${lang}')`);
+      });
+    }
+    highlightCurrentLang();
   </script>
+  <script src="i18n.js"></script>
 </body>
 </html>
