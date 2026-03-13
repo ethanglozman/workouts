@@ -4,6 +4,22 @@ All notable changes to the Workout Tracker app will be documented here.
 
 ---
 
+## [0.7.0] - 2026-03-13
+### Added
+- Add Exercise page (`add-exercise.html`) — add new exercises to the DB from the app, no SQL needed
+- New exercises: Super Incline Machine Press, Super Decline Machine Press, Top Down Cable Fly, Decline Barbell Bench Press, Rear Deltoid Fly, Machine Bicep Curl
+
+### Changed
+- Main page only shows today's sets — removed last session panel to reduce clutter
+- History page rows now render cleanly on mobile (exercise name as full-width header, stats in 2-col grid below)
+- Exercise names fixed to use DOM rendering instead of innerHTML to prevent display issues
+
+### Fixed
+- Add exercise route validation was checking wrong field name
+- History exercise names rendering with encoding artifacts
+
+---
+
 ## [0.6.0] - 2026-03-05
 ### Added
 - History page (`history.html`) with filters by day, exercise, and date range
