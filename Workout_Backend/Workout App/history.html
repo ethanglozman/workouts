@@ -157,30 +157,45 @@
         const section = document.createElement("div");
         section.className = "history-section";
 
-        section.innerHTML = `
-          <div class="history-date-header">
-            <span class="history-date">${formatDate(date)}</span>
-            <span class="history-day-tag ${dayLabel.toLowerCase()}">${dayLabel}</span>
-            <span class="history-vol">${dateVol.toLocaleString(undefined,{maximumFractionDigits:1})} lbs</span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Exercise</th><th>Reps</th><th>Wt</th><th>Vol</th><th>Notes</th></tr></thead>
-              <tbody>
-                ${entries.map(w => {
-                  const vol = (parseFloat(w.reps)*parseFloat(w.weight)).toFixed(1);
-                  return `<tr>
-                    <td data-label="Exercise">${w.exercise}</td>
-                    <td data-label="Reps">${w.reps}</td>
-                    <td data-label="Wt">${w.weight}</td>
-                    <td data-label="Vol">${vol}</td>
-                    <td data-label="Notes">${w.notes || ''}</td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
+        // Header
+        const header = document.createElement("div");
+        header.className = "history-date-header";
+        header.innerHTML = `
+          <span class="history-date">${formatDate(date)}</span>
+          <span class="history-day-tag ${dayLabel.toLowerCase()}">${dayLabel}</span>
+          <span class="history-vol">${dateVol.toLocaleString(undefined,{maximumFractionDigits:1})} lbs</span>
         `;
+        section.appendChild(header);
+
+        // Table
+        const tableWrap = document.createElement("div");
+        tableWrap.className = "table-wrap";
+        const tbl = document.createElement("table");
+        tbl.innerHTML = `<thead><tr><th>Exercise</th><th>Reps</th><th>Wt</th><th>Vol</th><th>Notes</th></tr></thead>`;
+        const tbody = document.createElement("tbody");
+
+        entries.forEach(w => {
+          const vol = (parseFloat(w.reps) * parseFloat(w.weight)).toFixed(1);
+          const tr = document.createElement("tr");
+          const cells = [
+            { label: "Exercise", val: w.exercise },
+            { label: "Reps",     val: w.reps },
+            { label: "Wt",       val: w.weight },
+            { label: "Vol",      val: vol },
+            { label: "Notes",    val: w.notes || "" }
+          ];
+          cells.forEach(({ label, val }) => {
+            const td = document.createElement("td");
+            td.setAttribute("data-label", label);
+            td.textContent = val;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+
+        tbl.appendChild(tbody);
+        tableWrap.appendChild(tbl);
+        section.appendChild(tableWrap);
         container.appendChild(section);
       });
     }
