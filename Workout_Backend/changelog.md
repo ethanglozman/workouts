@@ -4,6 +4,27 @@ All notable changes to the Workout Tracker app will be documented here.
 
 ---
 
+## [0.8.0] - 2026-03-13
+### Added
+- Cardio tracking page (`cardio.html`) — log type, duration, speed/level, distance and notes
+- Cardio types: Stairmaster, Running, Treadmill, Cycling, Elliptical, Rowing, Jump Rope
+- Multi-language support — 🇬🇧 🇫🇷 🇩🇪 🇷🇺 🇮🇱 flag picker on login screen
+- Hebrew support includes automatic RTL layout flip
+- `i18n.js` — shared translation script loaded on every page, hardcoded for reliability
+- `window.i18nT()` helper for translating dynamically generated content
+- 30 new exercises added across all days, focused on bodyweight movements
+- Alon added to user list
+
+### Changed
+- Language persists across all pages via session
+- Switched from LibreTranslate API to hardcoded translations (more reliable, no API dependency)
+- Exercise names kept in English as they are universal gym terms
+
+### Database
+- Run `cardio_table.sql` to create the cardio table
+
+---
+
 ## [0.7.0] - 2026-03-13
 ### Added
 - Add Exercise page (`add-exercise.html`) — add new exercises to the DB from the app, no SQL needed
