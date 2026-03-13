@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Exercise</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>➕ Add Exercise</h2>
+      <a href="/index.html" class="logout-btn" style="text-decoration:none;">← Back</a>
+    </div>
+
+    <div class="form-card">
+      <p style="color:#666;font-size:15px;margin:0;">Add a new exercise to the list. It will immediately appear in the dropdown on the main page.</p>
+
+      <div>
+        <label class="field-label">Exercise Name</label>
+        <input type="text" id="exName" placeholder="e.g. Bulgarian Split Squat" class="input">
+      </div>
+
+      <div>
+        <label class="field-label">Day</label>
+        <select id="exDay" class="input">
+          <option value="">Select day...</option>
+          <option value="Push">Push</option>
+          <option value="Pull">Pull</option>
+          <option value="Legs">Legs</option>
+          <option value="Core">Core</option>
+        </select>
+      </div>
+
+      <button onclick="addExercise()">Add Exercise</button>
+      <p id="feedback" style="text-align:center;font-size:15px;min-height:20px;margin:0;"></p>
+    </div>
+
+    <div class="section-label">Current Exercises</div>
+
+    <div id="exercisesByDay"></div>
+  </div>
+
+  <script>
+    async function checkLogin() {
+      const res = await fetch("/me");
+      if (!res.ok) window.location.href = "/login.html";
+    }
+    checkLogin();
+
+    async function addExercise() {
+      const name = document.getElementById("exName").value.trim();
+      const day = document.getElementById("exDay").value;
+      const feedback = document.getElementById("feedback");
+
+      if (!name || !day) {
+        feedback.style.color = "#e53e3e";
+        feedback.textContent = "Please fill in both fields.";
+        return;
+      }
+
+      const res = await fetch("/admin/exercises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, day })
+      });
+
+      if (res.ok) {
+        feedback.style.color = "#2d6a4f";
+        feedback.textContent = `✅ "${name}" added to ${day}!`;
+        document.getElementById("exName").value = "";
+        document.getElementById("exDay").value = "";
+        loadExercises();
+      } else {
+        feedback.style.color = "#e53e3e";
+        feedback.textContent = "Something went wrong. Try again.";
+      }
+    }
+
+    async function loadExercises() {
+      const res = await fetch("/admin/exercises");
+      if (!res.ok) return;
+      const data = await res.json();
+
+      // Group by day
+      const grouped = { Push: [], Pull: [], Legs: [], Core: [] };
+      data.forEach(e => {
+        if (grouped[e.day]) grouped[e.day].push(e.name);
+      });
+
+      const container = document.getElementById("exercisesByDay");
+      container.innerHTML = "";
+
+      const dayColors = {
+        Push: "push", Pull: "pull", Legs: "legs", Core: "core"
+      };
+
+      Object.entries(grouped).forEach(([day, exercises]) => {
+        if (exercises.length === 0) return;
+        const section = document.createElement("div");
+        section.className = "form-card";
+        section.style.marginBottom = "16px";
+        section.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <span class="history-day-tag ${dayColors[day]}">${day}</span>
+            <span style="color:#aaa;font-size:13px;">${exercises.length} exercises</span>
+          </div>
+          <div class="exercise-pill-list">
+            ${exercises.map(e => `<span class="exercise-pill">${e}</span>`).join('')}
+          </div>
+        `;
+        container.appendChild(section);
+      });
+    }
+
+    // Allow pressing Enter to submit
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter") addExercise();
+    });
+
+    loadExercises();
+  </script>
+</body>
+</html>
