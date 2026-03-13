@@ -45,6 +45,10 @@ const TRANSLATIONS = {
     "Clear Filters": "Effacer les filtres",
     "From": "De",
     "To": "À",
+    "Duration (min)": "Durée (min)",
+    "Speed / Level": "Vitesse / Niveau",
+    "Distance (km)": "Distance (km)",
+    "📝 Today's cardio": "📝 Cardio d'aujourd'hui",
   },
   de: {
     "💪 Workout Tracker": "💪 Trainings-Tracker",
@@ -89,6 +93,10 @@ const TRANSLATIONS = {
     "Clear Filters": "Filter löschen",
     "From": "Von",
     "To": "Bis",
+    "Duration (min)": "Dauer (min)",
+    "Speed / Level": "Geschwindigkeit / Level",
+    "Distance (km)": "Distanz (km)",
+    "📝 Today's cardio": "📝 Heutiges Cardio",
   },
   ru: {
     "💪 Workout Tracker": "💪 Трекер тренировок",
@@ -133,6 +141,10 @@ const TRANSLATIONS = {
     "Clear Filters": "Сбросить фильтры",
     "From": "С",
     "To": "По",
+    "Duration (min)": "Длительность (мин)",
+    "Speed / Level": "Скорость / Уровень",
+    "Distance (km)": "Дистанция (км)",
+    "📝 Today's cardio": "📝 Кардио сегодня",
   },
   he: {
     "💪 Workout Tracker": "💪 מעקב אימונים",
@@ -177,6 +189,10 @@ const TRANSLATIONS = {
     "Clear Filters": "נקה פילטרים",
     "From": "מ",
     "To": "עד",
+    "Duration (min)": "משך (דקות)",
+    "Speed / Level": "מהירות / רמה",
+    "Distance (km)": "מרחק (ק״מ)",
+    "📝 Today's cardio": "📝 קרדיו של היום",
   }
 };
 
@@ -205,6 +221,7 @@ async function applyTranslations() {
     });
 
     highlightActiveLang(lang);
+    window._currentLang = lang;
   } catch (err) {
     console.error("i18n error:", err);
   }
@@ -216,7 +233,14 @@ async function setLang(lang) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ lang })
   });
-  applyTranslations();
+  // Helper for translating strings in dynamically generated HTML
+window._currentLang = "en";
+window.i18nT = function(key) {
+  const t = TRANSLATIONS[window._currentLang] || {};
+  return t[key] || key;
+};
+
+applyTranslations();
 }
 
 function highlightActiveLang(lang) {
@@ -224,5 +248,12 @@ function highlightActiveLang(lang) {
     btn.classList.toggle("lang-active", btn.getAttribute("onclick") === `setLang('${lang}')`);
   });
 }
+
+// Helper for translating strings in dynamically generated HTML
+window._currentLang = "en";
+window.i18nT = function(key) {
+  const t = TRANSLATIONS[window._currentLang] || {};
+  return t[key] || key;
+};
 
 applyTranslations();
