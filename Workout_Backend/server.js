@@ -210,7 +210,7 @@ app.post("/admin/exercises", requireLogin, async (req, res) => {
   const { name, category, day: dayField } = req.body;
   const day = dayField || category;
 
-  if (!name || !category) {
+  if (!name || !day) {
     return res.status(400).json({ error: "Missing fields" });
   }
 
