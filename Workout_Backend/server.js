@@ -116,7 +116,7 @@ app.get("/exercises/:category", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("exercises")
     .select("*")
-    .eq("category", category)
+    .eq("day", category)
     .order("name");
 
   if (error) return res.status(500).json(error);
@@ -129,7 +129,7 @@ app.get("/admin/exercises", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("exercises")
     .select("*")
-    .order("category")
+    .order("day")
     .order("name");
 
   if (error) return res.status(500).json(error);
@@ -139,15 +139,15 @@ app.get("/admin/exercises", requireLogin, async (req, res) => {
 
 // Add exercise (admin page)
 app.post("/admin/exercises", requireLogin, async (req, res) => {
-  const { name, category } = req.body;
+  const { name, day } = req.body;
 
-  if (!name || !category) {
+  if (!name || !day) {
     return res.status(400).json({ error: "Missing fields" });
   }
 
   const { error } = await supabase
     .from("exercises")
-    .insert([{ name, category }]);
+    .insert([{ name, day }]);
 
   if (error) return res.status(500).json(error);
 
