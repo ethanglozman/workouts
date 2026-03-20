@@ -112,7 +112,7 @@ async function loadCurrentTable() {
 
   const todaySets = allWorkoutsCache
     .filter(w => w.date.slice(0,10) === activeDate)
-    .sort((a, b) => a.id - b.id);
+    .sort((a, b) => b.id - a.id);
 
   todayLabel.textContent = activeDate === today ? "📝 Today's sets" : `📝 Sets — ${activeDate}`;
 
