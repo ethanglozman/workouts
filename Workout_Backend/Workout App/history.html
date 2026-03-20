@@ -150,7 +150,7 @@
       }
 
       sortedDates.forEach(date => {
-        const entries = byDate[date];
+        const entries = byDate[date].sort((a, b) => a.id - b.id);
         const dayLabel = entries[0].day;
         const dateVol = entries.reduce((s,w) => s + parseFloat(w.reps)*parseFloat(w.weight), 0);
 
