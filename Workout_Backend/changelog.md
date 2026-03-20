@@ -4,6 +4,22 @@ All notable changes to the Workout Tracker app will be documented here.
 
 ---
 
+## [0.9.0] - 2026-03-20
+### Changed
+- Today's sets now sorted newest first (most recent set appears at top)
+- Full rewrite of `app.js`, `index.html`, `style.css`, and `server.js` to fix accumulated drift between repo and deployed versions
+- Nicole and Alon added to user list
+
+### Fixed
+- Today's sets was showing all workouts across all dates instead of current date only
+- Mobile card layout had broken back to raw table view (date/day showing as separate cells)
+- Server missing PUT/DELETE workout routes, notes field, date/day in insert, last-session endpoint, cardio routes, and language routes due to stale repo file being redeployed
+- `frontendPath` reverting to `../workout_app` instead of `Workout App`
+- Exercise dropdown empty after selecting a day (`category` vs `day` column mismatch recurring)
+- Workouts ordered by `created_at` (non-existent column) instead of `date`
+
+---
+
 ## [0.8.0] - 2026-03-13
 ### Added
 - Cardio tracking page (`cardio.html`) — log type, duration, speed/level, distance and notes
