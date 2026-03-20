@@ -26,13 +26,8 @@ app.use(
 );
 
 // Serve frontend
-const frontendPath = path.join(__dirname, "Workout App");
+const frontendPath = path.join(__dirname, "../workout_app");
 app.use(express.static(frontendPath));
-
-// Serve login page at root
-app.get("/", (req, res) => {
-  res.sendFile(path.join(frontendPath, "login.html"));
-});
 
 // ===== Auth Middleware =====
 function requireLogin(req, res, next) {
@@ -41,25 +36,6 @@ function requireLogin(req, res, next) {
   }
   next();
 }
-
-
-// =============================
-// TRANSLATION
-// =============================
-
-// Set language
-app.post("/language", (req, res) => {
-  const { lang } = req.body;
-  const supported = ["en", "fr", "de", "ru", "he"];
-  if (!supported.includes(lang)) return res.status(400).json({ error: "Unsupported language" });
-  req.session.lang = lang;
-  res.json({ success: true });
-});
-
-// Get current language
-app.get("/language", (req, res) => {
-  res.json({ lang: req.session.lang || "en" });
-});
 
 // =============================
 // AUTH ROUTES
@@ -103,7 +79,8 @@ app.get("/workouts", requireLogin, async (req, res) => {
     .from("workouts")
     .select("*")
     .eq("username", req.session.username)
-    .order("date", { ascending: false });
+    .order("date", { ascending: false })
+    .order("id", { ascending: false });
 
   if (error) return res.status(500).json(error);
 
@@ -112,128 +89,19 @@ app.get("/workouts", requireLogin, async (req, res) => {
 
 // Add workout
 app.post("/workouts", requireLogin, async (req, res) => {
-  const { exercise, reps, weight, date, day, notes } = req.body;
+  const { exercise, reps, weight } = req.body;
 
   const { error } = await supabase.from("workouts").insert([
     {
       username: req.session.username,
       exercise,
       reps,
-      weight,
-      date,
-      day,
-      notes: notes || null
+      weight
     }
   ]);
 
   if (error) return res.status(500).json(error);
 
-  res.json({ success: true });
-});
-
-
-// Update workout
-app.put("/workouts/:id", requireLogin, async (req, res) => {
-  const { id } = req.params;
-  const { date, reps, weight, notes } = req.body;
-
-  const { error } = await supabase
-    .from("workouts")
-    .update({ date, reps, weight, notes: notes || null })
-    .eq("id", id)
-    .eq("username", req.session.username);
-
-  if (error) return res.status(500).json(error);
-  res.json({ success: true });
-});
-
-// Delete workout
-app.delete("/workouts/:id", requireLogin, async (req, res) => {
-  const { id } = req.params;
-
-  const { error } = await supabase
-    .from("workouts")
-    .delete()
-    .eq("id", id)
-    .eq("username", req.session.username);
-
-  if (error) return res.status(500).json(error);
-  res.json({ success: true });
-});
-
-
-// Get last session for a given day
-app.get("/workouts/last-session/:day", requireLogin, async (req, res) => {
-  const { day } = req.params;
-
-  // Find the most recent date for this user + day
-  const { data: dates, error: dateError } = await supabase
-    .from("workouts")
-    .select("date")
-    .eq("username", req.session.username)
-    .eq("day", day)
-    .order("date", { ascending: false })
-    .limit(1);
-
-  if (dateError) return res.status(500).json(dateError);
-  if (!dates || dates.length === 0) return res.json([]);
-
-  const lastDate = dates[0].date;
-
-  const { data, error } = await supabase
-    .from("workouts")
-    .select("*")
-    .eq("username", req.session.username)
-    .eq("day", day)
-    .eq("date", lastDate)
-    .order("id", { ascending: true });
-
-  if (error) return res.status(500).json(error);
-  res.json(data);
-});
-
-
-// =============================
-// CARDIO ROUTES
-// =============================
-
-// Get cardio entries
-app.get("/cardio", requireLogin, async (req, res) => {
-  const { data, error } = await supabase
-    .from("cardio")
-    .select("*")
-    .eq("username", req.session.username)
-    .order("date", { ascending: false });
-
-  if (error) return res.status(500).json(error);
-  res.json(data);
-});
-
-// Add cardio entry
-app.post("/cardio", requireLogin, async (req, res) => {
-  const { date, type, duration, speed, distance, notes } = req.body;
-
-  const { error } = await supabase.from("cardio").insert([{
-    username: req.session.username,
-    date, type, duration,
-    speed:    speed    || null,
-    distance: distance || null,
-    notes:    notes    || null
-  }]);
-
-  if (error) return res.status(500).json(error);
-  res.json({ success: true });
-});
-
-// Delete cardio entry
-app.delete("/cardio/:id", requireLogin, async (req, res) => {
-  const { error } = await supabase
-    .from("cardio")
-    .delete()
-    .eq("id", req.params.id)
-    .eq("username", req.session.username);
-
-  if (error) return res.status(500).json(error);
   res.json({ success: true });
 });
 
@@ -248,7 +116,7 @@ app.get("/exercises/:category", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("exercises")
     .select("*")
-    .eq("day", category)
+    .eq("category", category)
     .order("name");
 
   if (error) return res.status(500).json(error);
@@ -261,7 +129,7 @@ app.get("/admin/exercises", requireLogin, async (req, res) => {
   const { data, error } = await supabase
     .from("exercises")
     .select("*")
-    .order("day")
+    .order("category")
     .order("name");
 
   if (error) return res.status(500).json(error);
@@ -271,16 +139,15 @@ app.get("/admin/exercises", requireLogin, async (req, res) => {
 
 // Add exercise (admin page)
 app.post("/admin/exercises", requireLogin, async (req, res) => {
-  const { name, category, day: dayField } = req.body;
-  const day = dayField || category;
+  const { name, category } = req.body;
 
-  if (!name || !day) {
+  if (!name || !category) {
     return res.status(400).json({ error: "Missing fields" });
   }
 
   const { error } = await supabase
     .from("exercises")
-    .insert([{ name, day }]);
+    .insert([{ name, category }]);
 
   if (error) return res.status(500).json(error);
 
