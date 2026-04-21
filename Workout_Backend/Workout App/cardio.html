@@ -18,7 +18,7 @@
     <div class="form-card">
       <div class="form-row">
         <input type="date" id="cardioDate">
-        <select id="cardioType">
+        <select id="cardioType" onchange="toggleCustomType()">
           <option value="">Type...</option>
           <option value="Stairmaster">Stairmaster</option>
           <option value="Running">Running</option>
@@ -27,7 +27,11 @@
           <option value="Elliptical">Elliptical</option>
           <option value="Rowing">Rowing</option>
           <option value="Jump Rope">Jump Rope</option>
+          <option value="__other__">Other...</option>
         </select>
+      </div>
+      <div id="customTypeWrap" style="display:none;">
+        <input type="text" id="customType" placeholder="Enter cardio type..." class="input">
       </div>
 
       <div class="form-row">
@@ -70,10 +74,19 @@
     const today = new Date().toISOString().slice(0, 10);
     document.getElementById("cardioDate").value = today;
 
+    function toggleCustomType() {
+      const val = document.getElementById("cardioType").value;
+      document.getElementById("customTypeWrap").style.display = val === "__other__" ? "block" : "none";
+    }
+
     async function addCardio() {
       const entry = {
         date:     document.getElementById("cardioDate").value,
-        type:     document.getElementById("cardioType").value,
+        type: (function() {
+          const t = document.getElementById("cardioType").value;
+          if (t === "__other__") return document.getElementById("customType").value.trim();
+          return t;
+        })(),
         duration: document.getElementById("cardioDuration").value,
         speed:    document.getElementById("cardioSpeed").value || null,
         distance: document.getElementById("cardioDistance").value || null,
@@ -93,6 +106,9 @@
 
       if (res.ok) {
         document.getElementById("cardioDuration").value = "";
+        document.getElementById("customType").value = "";
+        document.getElementById("cardioType").value = "";
+        document.getElementById("customTypeWrap").style.display = "none";
         document.getElementById("cardioSpeed").value = "";
         document.getElementById("cardioDistance").value = "";
         document.getElementById("cardioNotes").value = "";
