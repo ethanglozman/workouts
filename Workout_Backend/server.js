@@ -180,13 +180,14 @@ app.get("/cardio", requireLogin, async (req, res) => {
 });
 
 app.post("/cardio", requireLogin, async (req, res) => {
-  const { date, type, duration, speed, distance, notes } = req.body;
+  const { date, type, duration, speed, distance, calories, notes } = req.body;
 
   const { error } = await supabase.from("cardio").insert([{
     username: req.session.username,
     date, type, duration,
     speed:    speed    || null,
     distance: distance || null,
+    calories: calories  || null,
     notes:    notes    || null
   }]);
 
