@@ -45,9 +45,15 @@
         </div>
       </div>
 
-      <div>
-        <label class="field-label" data-i18n="Distance (km)">Distance (km)</label>
-        <input type="number" id="cardioDistance" placeholder="optional" inputmode="decimal" step="0.01">
+      <div class="form-row">
+        <div>
+          <label class="field-label" data-i18n="Distance (km)">Distance (km)</label>
+          <input type="number" id="cardioDistance" placeholder="optional" inputmode="decimal" step="0.01">
+        </div>
+        <div>
+          <label class="field-label">Calories Burnt</label>
+          <input type="number" id="cardioCalories" placeholder="optional" inputmode="numeric" step="1">
+        </div>
       </div>
 
       <textarea id="cardioNotes" placeholder="Notes (optional)" data-i18n-placeholder="Notes (optional)" rows="2"></textarea>
@@ -90,6 +96,7 @@
         duration: document.getElementById("cardioDuration").value,
         speed:    document.getElementById("cardioSpeed").value || null,
         distance: document.getElementById("cardioDistance").value || null,
+        calories: document.getElementById("cardioCalories").value || null,
         notes:    document.getElementById("cardioNotes").value.trim() || null
       };
 
@@ -106,6 +113,7 @@
 
       if (res.ok) {
         document.getElementById("cardioDuration").value = "";
+        document.getElementById("cardioCalories").value = "";
         document.getElementById("customType").value = "";
         document.getElementById("cardioType").value = "";
         document.getElementById("customTypeWrap").style.display = "none";
@@ -155,6 +163,7 @@
             <div class="cardio-stat"><span class="cardio-stat-label">${window.i18nT("Duration (min)")}</span><span>${c.duration} min</span></div>
             ${c.speed    ? `<div class="cardio-stat"><span class="cardio-stat-label">${window.i18nT("Speed / Level")}</span><span>${c.speed}</span></div>` : ''}
             ${c.distance ? `<div class="cardio-stat"><span class="cardio-stat-label">${window.i18nT("Distance (km)")}</span><span>${c.distance} km</span></div>` : ''}
+            ${c.calories ? `<div class="cardio-stat"><span class="cardio-stat-label">Calories</span><span>${c.calories} kcal</span></div>` : ''}
             ${c.notes    ? `<div class="cardio-stat" style="grid-column:1/-1"><span class="cardio-stat-label">${window.i18nT("Notes")}</span><span>${c.notes}</span></div>` : ''}
           </div>
         `;
